@@ -59,7 +59,7 @@ export const Gallery: React.FC = () => {
                 {/* Background Image */}
                 <div className="absolute inset-0 z-0">
                   <img 
-                    src={photo.url} 
+                    src={photo.url || null} 
                     alt={photo.title}
                     className="w-full h-full object-cover transform scale-100 group-hover:scale-110 transition-transform duration-700"
                     referrerPolicy="no-referrer"

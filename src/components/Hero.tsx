@@ -60,7 +60,7 @@ export const Hero: React.FC<HeroProps> = ({ onJoinClick, onViewPlansClick }) => 
         {/* Dark Background Overlay Image */}
         <div className="absolute inset-0 z-0">
           <img 
-            src={hero.image_url} 
+            src={hero.image_url || null} 
             alt="MS Fitness Premium Gym Background" 
             className="w-full h-full object-cover opacity-20 object-center"
             referrerPolicy="no-referrer"

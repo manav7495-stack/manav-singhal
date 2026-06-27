@@ -80,7 +80,7 @@ export const Services: React.FC = () => {
               {/* Background image overlay on hover */}
               <div className="absolute inset-0 z-0">
                 <img 
-                  src={service.bgImage} 
+                  src={service.bgImage || null} 
                   alt={service.title} 
                   className="w-full h-full object-cover opacity-0 group-hover:opacity-10 transition-opacity duration-500 scale-100 group-hover:scale-105"
                   referrerPolicy="no-referrer"

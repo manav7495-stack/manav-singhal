@@ -458,8 +458,16 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Synchronize on startup and subscribe to realtime updates
   useEffect(() => {
     const init = async () => {
-      await ensureSeeded();
-      await fetchData();
+      try {
+        if (isSupabaseConfigured && supabase) {
+          await ensureSeeded();
+          await fetchData();
+        }
+      } catch (err) {
+        console.error('Error during startup synchronization:', err);
+      } finally {
+        setLoading(false);
+      }
     };
     init();
 
@@ -474,6 +482,9 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return () => {
         supabase.removeChannel(channel);
       };
+    } else {
+      // If Supabase is not configured or fails to initialize, ensure loading state is cleared
+      setLoading(false);
     }
   }, []);
 
@@ -1016,19 +1027,62 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  // Computed safe fallbacks to prevent empty/blank database data from causing empty UI or crashes
+  const safePlans = plans && plans.length > 0 ? plans : defaultPlans;
+  const safeAnnouncements = announcements && announcements.length > 0 ? announcements : defaultAnnouncements;
+  const safeGallery = gallery && gallery.length > 0 ? gallery : defaultGallery;
+  const safeTrainers = trainers && trainers.length > 0 ? trainers : defaultTrainers;
+  const safeTestimonials = testimonials && testimonials.length > 0 ? testimonials : defaultTestimonials;
+
+  const safeSettings: GymSettings = {
+    phone: settings?.phone || defaultSettings.phone,
+    email: settings?.email || defaultSettings.email,
+    address: settings?.address || defaultSettings.address,
+    whatsappNumber: settings?.whatsappNumber || defaultSettings.whatsappNumber,
+    footerText: settings?.footerText || defaultSettings.footerText,
+    facebookUrl: settings?.facebookUrl || defaultSettings.facebookUrl,
+    instagramUrl: settings?.instagramUrl || defaultSettings.instagramUrl,
+    workingHours: settings?.workingHours || defaultSettings.workingHours
+  };
+
+  const safeHero: HeroSection = {
+    id: hero?.id || defaultHero.id,
+    title: hero?.title || defaultHero.title,
+    subtitle: hero?.subtitle || defaultHero.subtitle,
+    watermark: hero?.watermark || defaultHero.watermark,
+    image_url: hero?.image_url || defaultHero.image_url,
+    button_text_1: hero?.button_text_1 || defaultHero.button_text_1,
+    button_text_2: hero?.button_text_2 || defaultHero.button_text_2,
+    badge_text: hero?.badge_text || defaultHero.badge_text,
+    area_stat: hero?.area_stat || defaultHero.area_stat,
+    coaches_stat: hero?.coaches_stat || defaultHero.coaches_stat,
+    access_stat: hero?.access_stat || defaultHero.access_stat
+  };
+
+  const safeAbout: AboutSection = {
+    id: about?.id || defaultAbout.id,
+    title: about?.title || defaultAbout.title,
+    subtitle: about?.subtitle || defaultAbout.subtitle,
+    description_1: about?.description_1 || defaultAbout.description_1,
+    description_2: about?.description_2 || defaultAbout.description_2,
+    image_url: about?.image_url || defaultAbout.image_url,
+    quote: about?.quote || defaultAbout.quote,
+    features: Array.isArray(about?.features) && about.features.length > 0 ? about.features : defaultAbout.features
+  };
+
   return (
     <GymContext.Provider value={{
       requests,
       members,
-      plans,
-      announcements,
-      gallery,
+      plans: safePlans,
+      announcements: safeAnnouncements,
+      gallery: safeGallery,
       contactResponses,
-      settings,
-      trainers,
-      testimonials,
-      hero,
-      about,
+      settings: safeSettings,
+      trainers: safeTrainers,
+      testimonials: safeTestimonials,
+      hero: safeHero,
+      about: safeAbout,
       loading,
       refreshData,
       addRequest,

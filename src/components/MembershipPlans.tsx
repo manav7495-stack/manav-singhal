@@ -63,7 +63,7 @@ export const MembershipPlans: React.FC<MembershipPlansProps> = ({ onSelectPlan }
 
                 {/* Features List */}
                 <ul className="space-y-4 mb-10 text-xs sm:text-sm">
-                  {plan.features.map((feature, fIdx) => (
+                  {(Array.isArray(plan?.features) ? plan.features : []).map((feature, fIdx) => (
                     <li key={fIdx} className="flex items-start space-x-2.5 text-zinc-300">
                       <div className="text-brand font-bold mt-0.5 flex-shrink-0">
                         ✓

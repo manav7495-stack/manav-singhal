@@ -35,7 +35,7 @@ export const About: React.FC = () => {
             <div className="absolute -inset-1.5 bg-brand opacity-10 group-hover:opacity-20 rounded-sm blur-xs transition duration-700"></div>
             <div className="relative overflow-hidden rounded-sm border border-zinc-800 bg-zinc-900">
               <img 
-                src={about.image_url} 
+                src={about.image_url || null} 
                 alt="Trainer coaching member at MS Fitness" 
                 className="w-full h-[450px] object-cover transform scale-100 group-hover:scale-105 transition-transform duration-700"
                 referrerPolicy="no-referrer"
@@ -66,7 +66,7 @@ export const About: React.FC = () => {
 
             {/* Feature Highlights Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              {about.features.map((feat, idx) => {
+              {(Array.isArray(about?.features) ? about.features : []).map((feat, idx) => {
                 const IconComponent = IconMap[feat.icon] || Shield;
                 return (
                   <div key={idx} className="flex items-start space-x-4 p-4 rounded-sm bg-zinc-900/40 border border-zinc-900/60 hover:border-brand/40 hover:bg-zinc-900/80 transition-all">

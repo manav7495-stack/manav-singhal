@@ -26,6 +26,8 @@ export const RequestForm: React.FC<RequestFormProps> = ({ isOpen, onClose, prese
 
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   useEffect(() => {
     if (preselectedPlanId) {
@@ -62,9 +64,6 @@ export const RequestForm: React.FC<RequestFormProps> = ({ isOpen, onClose, prese
     setErrors(tempErrors);
     return Object.keys(tempErrors).length === 0;
   };
-
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

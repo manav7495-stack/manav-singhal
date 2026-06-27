@@ -954,7 +954,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   {gallery.map(photo => (
                     <div key={photo.id} className="bg-zinc-900 border border-zinc-850 rounded-2xl overflow-hidden flex flex-col justify-between h-80">
                       <div className="h-44 relative bg-zinc-950">
-                        <img src={photo.url} alt={photo.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                        <img src={photo.url || null} alt={photo.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                         <span className="absolute top-3 left-3 bg-red-600 text-white font-black text-[9px] uppercase px-2 py-0.5 rounded">
                           {photo.category}
                         </span>
@@ -1411,7 +1411,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {trainers.map(tr => (
                     <div key={tr.id} className="p-5 bg-zinc-900 border border-zinc-850 rounded-2xl flex flex-col sm:flex-row gap-5 items-center">
-                      <img src={tr.image_url} alt={tr.name} className="w-24 h-24 rounded-full object-cover border-2 border-red-600 flex-shrink-0" />
+                      <img src={tr.image_url || null} alt={tr.name} className="w-24 h-24 rounded-full object-cover border-2 border-red-600 flex-shrink-0" />
                       <div className="space-y-2 flex-1 text-center sm:text-left">
                         <div>
                           <h4 className="font-sans font-black text-lg uppercase text-white tracking-wide">{tr.name}</h4>

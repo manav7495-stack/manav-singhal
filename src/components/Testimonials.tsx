@@ -41,7 +41,7 @@ export const Testimonials: React.FC = () => {
               <div>
                 {/* Stars */}
                 <div className="flex items-center space-x-1 text-brand mb-6">
-                  {Array.from({ length: test.rating }).map((_, i) => (
+                  {Array.from({ length: typeof test?.rating === 'number' && test.rating > 0 ? test.rating : 5 }).map((_, i) => (
                     <Star key={i} size={15} className="fill-brand" />
                   ))}
                 </div>
