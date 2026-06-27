@@ -283,125 +283,19 @@ interface GymContextProps {
 const GymContext = createContext<GymContextProps | undefined>(undefined);
 
 export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [requests, setRequests] = useState<MembershipRequest[]>(() => {
-    const data = localStorage.getItem('ms_requests');
-    if (!data) return [];
-    try {
-      const parsed = JSON.parse(data) as MembershipRequest[];
-      return parsed.filter(r => r.id !== 'req-1' && r.id !== 'req-2');
-    } catch {
-      return [];
-    }
-  });
-
-  const [members, setMembers] = useState<Member[]>(() => {
-    const data = localStorage.getItem('ms_members');
-    if (!data) return [];
-    try {
-      const parsed = JSON.parse(data) as Member[];
-      return parsed.filter(m => m.id !== 'mem-1' && m.id !== 'mem-2' && m.id !== 'mem-3');
-    } catch {
-      return [];
-    }
-  });
-
-  const [plans, setPlans] = useState<MembershipPlan[]>(() => {
-    const data = localStorage.getItem('ms_plans');
-    return data ? JSON.parse(data) : defaultPlans;
-  });
-
-  const [announcements, setAnnouncements] = useState<Announcement[]>(() => {
-    const data = localStorage.getItem('ms_announcements');
-    return data ? JSON.parse(data) : defaultAnnouncements;
-  });
-
-  const [gallery, setGallery] = useState<GalleryPhoto[]>(() => {
-    const data = localStorage.getItem('ms_gallery');
-    return data ? JSON.parse(data) : defaultGallery;
-  });
-
-  const [contactResponses, setContactResponses] = useState<ContactResponse[]>(() => {
-    const data = localStorage.getItem('ms_contact_responses');
-    if (!data) return [];
-    try {
-      const parsed = JSON.parse(data) as ContactResponse[];
-      return parsed.filter(c => c.id !== 'res-1');
-    } catch {
-      return [];
-    }
-  });
-
-  const [settings, setSettings] = useState<GymSettings>(() => {
-    const data = localStorage.getItem('ms_settings');
-    return data ? JSON.parse(data) : defaultSettings;
-  });
-
-  const [trainers, setTrainers] = useState<Trainer[]>(() => {
-    const data = localStorage.getItem('ms_trainers');
-    return data ? JSON.parse(data) : defaultTrainers;
-  });
-
-  const [testimonials, setTestimonials] = useState<Testimonial[]>(() => {
-    const data = localStorage.getItem('ms_testimonials');
-    return data ? JSON.parse(data) : defaultTestimonials;
-  });
-
-  const [hero, setHero] = useState<HeroSection>(() => {
-    const data = localStorage.getItem('ms_hero');
-    return data ? JSON.parse(data) : defaultHero;
-  });
-
-  const [about, setAbout] = useState<AboutSection>(() => {
-    const data = localStorage.getItem('ms_about');
-    return data ? JSON.parse(data) : defaultAbout;
-  });
+  const [requests, setRequests] = useState<MembershipRequest[]>([]);
+  const [members, setMembers] = useState<Member[]>([]);
+  const [plans, setPlans] = useState<MembershipPlan[]>(defaultPlans);
+  const [announcements, setAnnouncements] = useState<Announcement[]>(defaultAnnouncements);
+  const [gallery, setGallery] = useState<GalleryPhoto[]>(defaultGallery);
+  const [contactResponses, setContactResponses] = useState<ContactResponse[]>([]);
+  const [settings, setSettings] = useState<GymSettings>(defaultSettings);
+  const [trainers, setTrainers] = useState<Trainer[]>(defaultTrainers);
+  const [testimonials, setTestimonials] = useState<Testimonial[]>(defaultTestimonials);
+  const [hero, setHero] = useState<HeroSection>(defaultHero);
+  const [about, setAbout] = useState<AboutSection>(defaultAbout);
 
   const [loading, setLoading] = useState(false);
-
-  // Sync to localStorage as local fallback
-  useEffect(() => {
-    localStorage.setItem('ms_requests', JSON.stringify(requests));
-  }, [requests]);
-
-  useEffect(() => {
-    localStorage.setItem('ms_members', JSON.stringify(members));
-  }, [members]);
-
-  useEffect(() => {
-    localStorage.setItem('ms_plans', JSON.stringify(plans));
-  }, [plans]);
-
-  useEffect(() => {
-    localStorage.setItem('ms_announcements', JSON.stringify(announcements));
-  }, [announcements]);
-
-  useEffect(() => {
-    localStorage.setItem('ms_gallery', JSON.stringify(gallery));
-  }, [gallery]);
-
-  useEffect(() => {
-    localStorage.setItem('ms_contact_responses', JSON.stringify(contactResponses));
-  }, [contactResponses]);
-
-  useEffect(() => {
-    localStorage.setItem('ms_settings', JSON.stringify(settings));
-  }, [settings]);
-
-  useEffect(() => {
-    localStorage.setItem('ms_trainers', JSON.stringify(trainers));
-  }, [trainers]);
-
-  useEffect(() => {
-    localStorage.setItem('ms_testimonials', JSON.stringify(testimonials));
-  }, [testimonials]);
-
-  useEffect(() => {
-    localStorage.setItem('ms_hero', JSON.stringify(hero));
-  }, [hero]);
-
-  useEffect(() => {
-    localStorage.setItem('ms_about', JSON.stringify(about));
-  }, [about]);
 
   // Fetch all tables from Supabase
   const fetchData = async () => {
@@ -409,56 +303,40 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       setLoading(true);
 
-      const [
-        plansRes,
-        annRes,
-        galRes,
-        trainersRes,
-        testRes,
-        settingsRes,
-        heroRes,
-        aboutRes,
-        reqRes,
-        memRes,
-        contactRes
-      ] = await Promise.all([
-        supabase.from('membership_plans').select('*'),
-        supabase.from('announcements').select('*'),
-        supabase.from('gallery_photos').select('*'),
-        supabase.from('trainers').select('*'),
-        supabase.from('testimonials').select('*'),
-        supabase.from('gym_settings').select('*').eq('id', 'primary').maybeSingle(),
-        supabase.from('hero_section').select('*').eq('id', 'primary').maybeSingle(),
-        supabase.from('about_section').select('*').eq('id', 'primary').maybeSingle(),
-        supabase.from('membership_requests').select('*'),
-        supabase.from('members').select('*'),
-        supabase.from('contact_responses').select('*')
+      // Safe fetch helper to fetch individual tables without breaking other tables
+      const fetchTable = async (tableName: string, query: any, setter: (val: any) => void) => {
+        try {
+          const { data, error } = await query;
+          if (error) {
+            console.warn(`Could not fetch ${tableName} from Supabase:`, error.message);
+          } else if (data !== null) {
+            setter(data);
+          }
+        } catch (err) {
+          console.warn(`Exception fetching ${tableName}:`, err);
+        }
+      };
+
+      await Promise.all([
+        fetchTable('membership_plans', supabase.from('membership_plans').select('*'), setPlans),
+        fetchTable('announcements', supabase.from('announcements').select('*'), setAnnouncements),
+        fetchTable('gallery_photos', supabase.from('gallery_photos').select('*'), setGallery),
+        fetchTable('trainers', supabase.from('trainers').select('*'), setTrainers),
+        fetchTable('testimonials', supabase.from('testimonials').select('*'), setTestimonials),
+        fetchTable('gym_settings', supabase.from('gym_settings').select('*').eq('id', 'primary').maybeSingle(), setSettings),
+        fetchTable('hero_section', supabase.from('hero_section').select('*').eq('id', 'primary').maybeSingle(), setHero),
+        fetchTable('about_section', supabase.from('about_section').select('*').eq('id', 'primary').maybeSingle(), (data) => {
+          if (data) {
+            const featData = typeof data.features === 'string'
+              ? JSON.parse(data.features)
+              : data.features;
+            setAbout({ ...data, features: featData });
+          }
+        }),
+        fetchTable('membership_requests', supabase.from('membership_requests').select('*'), setRequests),
+        fetchTable('members', supabase.from('members').select('*'), setMembers),
+        fetchTable('contact_responses', supabase.from('contact_responses').select('*'), setContactResponses)
       ]);
-
-      if (plansRes.data) setPlans(plansRes.data);
-      if (annRes.data) setAnnouncements(annRes.data);
-      if (galRes.data) setGallery(galRes.data);
-      if (trainersRes.data) setTrainers(trainersRes.data);
-      if (testRes.data) setTestimonials(testRes.data);
-      
-      if (settingsRes.data) {
-        setSettings(settingsRes.data);
-      }
-      
-      if (heroRes.data) {
-        setHero(heroRes.data);
-      }
-      
-      if (aboutRes.data) {
-        const featData = typeof aboutRes.data.features === 'string'
-          ? JSON.parse(aboutRes.data.features)
-          : aboutRes.data.features;
-        setAbout({ ...aboutRes.data, features: featData });
-      }
-
-      if (reqRes.data) setRequests(reqRes.data);
-      if (memRes.data) setMembers(memRes.data);
-      if (contactRes.data) setContactResponses(contactRes.data);
 
     } catch (err) {
       console.error('Failed to load from Supabase:', err);
@@ -541,10 +419,14 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setRequests(prev => [request, ...prev]);
 
     if (isSupabaseConfigured && supabase) {
-      const { error } = await supabase.from('membership_requests').insert([request]);
-      if (error) {
-        console.error('Failed to sync addRequest to Supabase:', error);
-        throw error;
+      try {
+        const { error } = await supabase.from('membership_requests').insert([request]);
+        if (error) throw error;
+        await fetchData();
+      } catch (err: any) {
+        console.error('Failed to sync addRequest to Supabase:', err);
+        alert('Failed to submit request to database: ' + (err.message || err));
+        throw err;
       }
     }
   };
@@ -586,17 +468,19 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
 
     if (isSupabaseConfigured && supabase) {
-      const { error: reqError } = await supabase.from('membership_requests').update({ status }).eq('id', id);
-      if (reqError) {
-        console.error('Failed to sync updateRequestStatus to Supabase:', reqError);
-        throw reqError;
-      }
-      if (newMember) {
-        const { error: memError } = await supabase.from('members').insert([newMember]);
-        if (memError) {
-          console.error('Failed to insert new member to Supabase:', memError);
-          throw memError;
+      try {
+        const { error: reqError } = await supabase.from('membership_requests').update({ status }).eq('id', id);
+        if (reqError) throw reqError;
+        if (newMember) {
+          const { error: memError } = await supabase.from('members').insert([newMember]);
+          if (memError) throw memError;
         }
+        await fetchData();
+        alert(`Membership request successfully ${status.toLowerCase()} and synchronized!`);
+      } catch (err: any) {
+        console.error('Failed to sync updateRequestStatus to Supabase:', err);
+        alert('Failed to update request status in database: ' + (err.message || err));
+        throw err;
       }
     }
   };
@@ -610,10 +494,15 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setMembers(prev => [member, ...prev]);
 
     if (isSupabaseConfigured && supabase) {
-      const { error } = await supabase.from('members').insert([member]);
-      if (error) {
-        console.error('Failed to sync addMember to Supabase:', error);
-        throw error;
+      try {
+        const { error } = await supabase.from('members').insert([member]);
+        if (error) throw error;
+        await fetchData();
+        alert('Member successfully added and synchronized!');
+      } catch (err: any) {
+        console.error('Failed to sync addMember to Supabase:', err);
+        alert('Failed to save Member to database: ' + (err.message || err));
+        throw err;
       }
     }
   };
@@ -622,10 +511,15 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setMembers(prev => prev.map(m => m.id === updatedMember.id ? updatedMember : m));
 
     if (isSupabaseConfigured && supabase) {
-      const { error } = await supabase.from('members').update(updatedMember).eq('id', updatedMember.id);
-      if (error) {
-        console.error('Failed to sync updateMember to Supabase:', error);
-        throw error;
+      try {
+        const { error } = await supabase.from('members').update(updatedMember).eq('id', updatedMember.id);
+        if (error) throw error;
+        await fetchData();
+        alert('Member details successfully updated and synchronized!');
+      } catch (err: any) {
+        console.error('Failed to sync updateMember to Supabase:', err);
+        alert('Failed to update Member in database: ' + (err.message || err));
+        throw err;
       }
     }
   };
@@ -634,10 +528,15 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setMembers(prev => prev.filter(m => m.id !== id));
 
     if (isSupabaseConfigured && supabase) {
-      const { error } = await supabase.from('members').delete().eq('id', id);
-      if (error) {
-        console.error('Failed to sync deleteMember to Supabase:', error);
-        throw error;
+      try {
+        const { error } = await supabase.from('members').delete().eq('id', id);
+        if (error) throw error;
+        await fetchData();
+        alert('Member successfully removed from database!');
+      } catch (err: any) {
+        console.error('Failed to sync deleteMember to Supabase:', err);
+        alert('Failed to delete Member from database: ' + (err.message || err));
+        throw err;
       }
     }
   };
@@ -651,10 +550,15 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setPlans(prev => [...prev, plan]);
 
     if (isSupabaseConfigured && supabase) {
-      const { error } = await supabase.from('membership_plans').insert([plan]);
-      if (error) {
-        console.error('Failed to sync addPlan to Supabase:', error);
-        throw error;
+      try {
+        const { error } = await supabase.from('membership_plans').insert([plan]);
+        if (error) throw error;
+        await fetchData();
+        alert('Membership Plan successfully created and synchronized!');
+      } catch (err: any) {
+        console.error('Failed to sync addPlan to Supabase:', err);
+        alert('Failed to save Membership Plan to database: ' + (err.message || err));
+        throw err;
       }
     }
   };
@@ -663,10 +567,15 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setPlans(prev => prev.map(p => p.id === updatedPlan.id ? updatedPlan : p));
 
     if (isSupabaseConfigured && supabase) {
-      const { error } = await supabase.from('membership_plans').update(updatedPlan).eq('id', updatedPlan.id);
-      if (error) {
-        console.error('Failed to sync updatePlan to Supabase:', error);
-        throw error;
+      try {
+        const { error } = await supabase.from('membership_plans').update(updatedPlan).eq('id', updatedPlan.id);
+        if (error) throw error;
+        await fetchData();
+        alert('Membership Plan successfully updated and synchronized!');
+      } catch (err: any) {
+        console.error('Failed to sync updatePlan to Supabase:', err);
+        alert('Failed to update Membership Plan in database: ' + (err.message || err));
+        throw err;
       }
     }
   };
@@ -675,10 +584,15 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setPlans(prev => prev.filter(p => p.id !== id));
 
     if (isSupabaseConfigured && supabase) {
-      const { error } = await supabase.from('membership_plans').delete().eq('id', id);
-      if (error) {
-        console.error('Failed to sync deletePlan to Supabase:', error);
-        throw error;
+      try {
+        const { error } = await supabase.from('membership_plans').delete().eq('id', id);
+        if (error) throw error;
+        await fetchData();
+        alert('Membership Plan successfully deleted!');
+      } catch (err: any) {
+        console.error('Failed to sync deletePlan to Supabase:', err);
+        alert('Failed to delete Membership Plan from database: ' + (err.message || err));
+        throw err;
       }
     }
   };
@@ -693,10 +607,15 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setAnnouncements(prev => [announcement, ...prev]);
 
     if (isSupabaseConfigured && supabase) {
-      const { error } = await supabase.from('announcements').insert([announcement]);
-      if (error) {
-        console.error('Failed to sync addAnnouncement to Supabase:', error);
-        throw error;
+      try {
+        const { error } = await supabase.from('announcements').insert([announcement]);
+        if (error) throw error;
+        await fetchData();
+        alert('Announcement successfully posted and synchronized!');
+      } catch (err: any) {
+        console.error('Failed to sync addAnnouncement to Supabase:', err);
+        alert('Failed to post Announcement to database: ' + (err.message || err));
+        throw err;
       }
     }
   };
@@ -705,10 +624,15 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setAnnouncements(prev => prev.map(a => a.id === updatedAnn.id ? updatedAnn : a));
 
     if (isSupabaseConfigured && supabase) {
-      const { error } = await supabase.from('announcements').update(updatedAnn).eq('id', updatedAnn.id);
-      if (error) {
-        console.error('Failed to sync updateAnnouncement to Supabase:', error);
-        throw error;
+      try {
+        const { error } = await supabase.from('announcements').update(updatedAnn).eq('id', updatedAnn.id);
+        if (error) throw error;
+        await fetchData();
+        alert('Announcement successfully updated and synchronized!');
+      } catch (err: any) {
+        console.error('Failed to sync updateAnnouncement to Supabase:', err);
+        alert('Failed to update Announcement in database: ' + (err.message || err));
+        throw err;
       }
     }
   };
@@ -717,10 +641,15 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setAnnouncements(prev => prev.filter(a => a.id !== id));
 
     if (isSupabaseConfigured && supabase) {
-      const { error } = await supabase.from('announcements').delete().eq('id', id);
-      if (error) {
-        console.error('Failed to sync deleteAnnouncement to Supabase:', error);
-        throw error;
+      try {
+        const { error } = await supabase.from('announcements').delete().eq('id', id);
+        if (error) throw error;
+        await fetchData();
+        alert('Announcement successfully deleted!');
+      } catch (err: any) {
+        console.error('Failed to sync deleteAnnouncement to Supabase:', err);
+        alert('Failed to delete Announcement from database: ' + (err.message || err));
+        throw err;
       }
     }
   };
@@ -734,10 +663,15 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setGallery(prev => [...prev, newPhoto]);
 
     if (isSupabaseConfigured && supabase) {
-      const { error } = await supabase.from('gallery_photos').insert([newPhoto]);
-      if (error) {
-        console.error('Failed to sync addGalleryPhoto to Supabase:', error);
-        throw error;
+      try {
+        const { error } = await supabase.from('gallery_photos').insert([newPhoto]);
+        if (error) throw error;
+        await fetchData();
+        alert('Gallery Photo successfully uploaded and synchronized!');
+      } catch (err: any) {
+        console.error('Failed to sync addGalleryPhoto to Supabase:', err);
+        alert('Failed to save Gallery Photo to database: ' + (err.message || err));
+        throw err;
       }
     }
   };
@@ -746,10 +680,15 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setGallery(prev => prev.map(p => p.id === updatedPhoto.id ? updatedPhoto : p));
 
     if (isSupabaseConfigured && supabase) {
-      const { error } = await supabase.from('gallery_photos').update(updatedPhoto).eq('id', updatedPhoto.id);
-      if (error) {
-        console.error('Failed to sync updateGalleryPhoto to Supabase:', error);
-        throw error;
+      try {
+        const { error } = await supabase.from('gallery_photos').update(updatedPhoto).eq('id', updatedPhoto.id);
+        if (error) throw error;
+        await fetchData();
+        alert('Gallery Photo successfully updated and synchronized!');
+      } catch (err: any) {
+        console.error('Failed to sync updateGalleryPhoto to Supabase:', err);
+        alert('Failed to update Gallery Photo in database: ' + (err.message || err));
+        throw err;
       }
     }
   };
@@ -758,10 +697,15 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setGallery(prev => prev.filter(p => p.id !== id));
 
     if (isSupabaseConfigured && supabase) {
-      const { error } = await supabase.from('gallery_photos').delete().eq('id', id);
-      if (error) {
-        console.error('Failed to sync deleteGalleryPhoto to Supabase:', error);
-        throw error;
+      try {
+        const { error } = await supabase.from('gallery_photos').delete().eq('id', id);
+        if (error) throw error;
+        await fetchData();
+        alert('Gallery Photo successfully deleted!');
+      } catch (err: any) {
+        console.error('Failed to sync deleteGalleryPhoto to Supabase:', err);
+        alert('Failed to delete Gallery Photo from database: ' + (err.message || err));
+        throw err;
       }
     }
   };
@@ -776,10 +720,14 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setContactResponses(prev => [newResponse, ...prev]);
 
     if (isSupabaseConfigured && supabase) {
-      const { error } = await supabase.from('contact_responses').insert([newResponse]);
-      if (error) {
-        console.error('Failed to sync addContactResponse to Supabase:', error);
-        throw error;
+      try {
+        const { error } = await supabase.from('contact_responses').insert([newResponse]);
+        if (error) throw error;
+        await fetchData();
+      } catch (err: any) {
+        console.error('Failed to sync addContactResponse to Supabase:', err);
+        alert('Failed to send contact message to database: ' + (err.message || err));
+        throw err;
       }
     }
   };
@@ -788,10 +736,15 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setContactResponses(prev => prev.filter(r => r.id !== id));
 
     if (isSupabaseConfigured && supabase) {
-      const { error } = await supabase.from('contact_responses').delete().eq('id', id);
-      if (error) {
-        console.error('Failed to sync deleteContactResponse to Supabase:', error);
-        throw error;
+      try {
+        const { error } = await supabase.from('contact_responses').delete().eq('id', id);
+        if (error) throw error;
+        await fetchData();
+        alert('Contact Message successfully deleted!');
+      } catch (err: any) {
+        console.error('Failed to sync deleteContactResponse to Supabase:', err);
+        alert('Failed to delete Contact Message from database: ' + (err.message || err));
+        throw err;
       }
     }
   };
@@ -801,13 +754,16 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setSettings(updatedSettings);
 
     if (isSupabaseConfigured && supabase) {
-      const { error } = await supabase.from('gym_settings').upsert({
-        id: 'primary',
-        ...updatedSettings
-      });
-      if (error) {
-        console.error('Failed to sync updateSettings to Supabase:', error);
-        throw error;
+      try {
+        const { error } = await supabase.from('gym_settings').upsert({
+          id: 'primary',
+          ...updatedSettings
+        });
+        if (error) throw error;
+        await fetchData();
+      } catch (err: any) {
+        console.error('Failed to sync updateSettings to Supabase:', err);
+        throw err;
       }
     }
   };
@@ -821,10 +777,15 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setTrainers(prev => [...prev, trainer]);
 
     if (isSupabaseConfigured && supabase) {
-      const { error } = await supabase.from('trainers').insert([trainer]);
-      if (error) {
-        console.error('Failed to sync addTrainer to Supabase:', error);
-        throw error;
+      try {
+        const { error } = await supabase.from('trainers').insert([trainer]);
+        if (error) throw error;
+        await fetchData();
+        alert('Trainer successfully added and synchronized!');
+      } catch (err: any) {
+        console.error('Failed to sync addTrainer to Supabase:', err);
+        alert('Failed to save Trainer to database: ' + (err.message || err));
+        throw err;
       }
     }
   };
@@ -833,10 +794,15 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setTrainers(prev => prev.map(t => t.id === updatedTrainer.id ? updatedTrainer : t));
 
     if (isSupabaseConfigured && supabase) {
-      const { error } = await supabase.from('trainers').update(updatedTrainer).eq('id', updatedTrainer.id);
-      if (error) {
-        console.error('Failed to sync updateTrainer to Supabase:', error);
-        throw error;
+      try {
+        const { error } = await supabase.from('trainers').update(updatedTrainer).eq('id', updatedTrainer.id);
+        if (error) throw error;
+        await fetchData();
+        alert('Trainer successfully updated and synchronized!');
+      } catch (err: any) {
+        console.error('Failed to sync updateTrainer to Supabase:', err);
+        alert('Failed to update Trainer in database: ' + (err.message || err));
+        throw err;
       }
     }
   };
@@ -845,10 +811,15 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setTrainers(prev => prev.filter(t => t.id !== id));
 
     if (isSupabaseConfigured && supabase) {
-      const { error } = await supabase.from('trainers').delete().eq('id', id);
-      if (error) {
-        console.error('Failed to sync deleteTrainer to Supabase:', error);
-        throw error;
+      try {
+        const { error } = await supabase.from('trainers').delete().eq('id', id);
+        if (error) throw error;
+        await fetchData();
+        alert('Trainer successfully deleted!');
+      } catch (err: any) {
+        console.error('Failed to sync deleteTrainer to Supabase:', err);
+        alert('Failed to delete Trainer from database: ' + (err.message || err));
+        throw err;
       }
     }
   };
@@ -862,10 +833,15 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setTestimonials(prev => [...prev, testimonial]);
 
     if (isSupabaseConfigured && supabase) {
-      const { error } = await supabase.from('testimonials').insert([testimonial]);
-      if (error) {
-        console.error('Failed to sync addTestimonial to Supabase:', error);
-        throw error;
+      try {
+        const { error } = await supabase.from('testimonials').insert([testimonial]);
+        if (error) throw error;
+        await fetchData();
+        alert('Testimonial successfully created and synchronized!');
+      } catch (err: any) {
+        console.error('Failed to sync addTestimonial to Supabase:', err);
+        alert('Failed to save Testimonial to database: ' + (err.message || err));
+        throw err;
       }
     }
   };
@@ -874,10 +850,15 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setTestimonials(prev => prev.map(t => t.id === updatedTestimonial.id ? updatedTestimonial : t));
 
     if (isSupabaseConfigured && supabase) {
-      const { error } = await supabase.from('testimonials').update(updatedTestimonial).eq('id', updatedTestimonial.id);
-      if (error) {
-        console.error('Failed to sync updateTestimonial to Supabase:', error);
-        throw error;
+      try {
+        const { error } = await supabase.from('testimonials').update(updatedTestimonial).eq('id', updatedTestimonial.id);
+        if (error) throw error;
+        await fetchData();
+        alert('Testimonial successfully updated and synchronized!');
+      } catch (err: any) {
+        console.error('Failed to sync updateTestimonial to Supabase:', err);
+        alert('Failed to update Testimonial in database: ' + (err.message || err));
+        throw err;
       }
     }
   };
@@ -886,10 +867,15 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setTestimonials(prev => prev.filter(t => t.id !== id));
 
     if (isSupabaseConfigured && supabase) {
-      const { error } = await supabase.from('testimonials').delete().eq('id', id);
-      if (error) {
-        console.error('Failed to sync deleteTestimonial to Supabase:', error);
-        throw error;
+      try {
+        const { error } = await supabase.from('testimonials').delete().eq('id', id);
+        if (error) throw error;
+        await fetchData();
+        alert('Testimonial successfully deleted!');
+      } catch (err: any) {
+        console.error('Failed to sync deleteTestimonial to Supabase:', err);
+        alert('Failed to delete Testimonial from database: ' + (err.message || err));
+        throw err;
       }
     }
   };
@@ -899,13 +885,16 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setHero(updatedHero);
 
     if (isSupabaseConfigured && supabase) {
-      const { error } = await supabase.from('hero_section').upsert({
-        id: 'primary',
-        ...updatedHero
-      });
-      if (error) {
-        console.error('Failed to sync updateHero to Supabase:', error);
-        throw error;
+      try {
+        const { error } = await supabase.from('hero_section').upsert({
+          id: 'primary',
+          ...updatedHero
+        });
+        if (error) throw error;
+        await fetchData();
+      } catch (err: any) {
+        console.error('Failed to sync updateHero to Supabase:', err);
+        throw err;
       }
     }
   };
@@ -914,14 +903,17 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setAbout(updatedAbout);
 
     if (isSupabaseConfigured && supabase) {
-      const { error } = await supabase.from('about_section').upsert({
-        id: 'primary',
-        ...updatedAbout,
-        features: updatedAbout.features
-      });
-      if (error) {
-        console.error('Failed to sync updateAbout to Supabase:', error);
-        throw error;
+      try {
+        const { error } = await supabase.from('about_section').upsert({
+          id: 'primary',
+          ...updatedAbout,
+          features: updatedAbout.features
+        });
+        if (error) throw error;
+        await fetchData();
+      } catch (err: any) {
+        console.error('Failed to sync updateAbout to Supabase:', err);
+        throw err;
       }
     }
   };
