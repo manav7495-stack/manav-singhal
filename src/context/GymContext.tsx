@@ -440,24 +440,49 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Request actions
   const addRequest = async (newReq: Omit<MembershipRequest, 'id' | 'status' | 'createdAt'>) => {
-    const request: MembershipRequest = {
-      ...newReq,
-      id: `req-${Date.now()}`,
-      status: 'Pending',
-      createdAt: new Date().toISOString()
+    const id = `req-${Date.now()}`;
+    const createdAt = new Date().toISOString();
+
+    const request = {
+      id,
+      fullName: newReq.fullName,
+      mobileNumber: newReq.mobileNumber,
+      email: newReq.email,
+      age: newReq.age,
+      gender: newReq.gender,
+      selectedPlanId: newReq.selectedPlanId,
+      fitnessGoal: newReq.fitnessGoal,
+      address: newReq.address,
+      message: newReq.message || '',
+      status: 'Pending' as const,
+      createdAt
     };
-    setRequests(prev => [request, ...prev]);
 
     if (isSupabaseConfigured && supabase) {
       try {
-        const { error } = await supabase.from('membership_requests').insert([request]);
-        if (error) throw error;
+        console.log('Inserting request directly into Supabase table "membership_requests":', request);
+        
+        const { error } = await supabase
+          .from('membership_requests')
+          .insert([request]);
+
+        if (error) {
+          console.error('Exact Supabase insert error details:', error);
+          throw error;
+        }
+
+        console.log('Successfully completed insert into "membership_requests"!');
+        
+        // Wait for fresh data fetch to update the list
         await fetchData();
       } catch (err: any) {
         console.error('Failed to sync addRequest to Supabase:', err);
-        alert('Failed to submit request to database: ' + (err.message || err));
         throw err;
       }
+    } else {
+      const errorMsg = 'Supabase client is not configured or is null.';
+      console.error(errorMsg);
+      throw new Error(errorMsg);
     }
   };
 

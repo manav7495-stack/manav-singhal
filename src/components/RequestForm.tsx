@@ -63,38 +63,52 @@ export const RequestForm: React.FC<RequestFormProps> = ({ isOpen, onClose, prese
     return Object.keys(tempErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (validate()) {
-      addRequest({
-        fullName: formData.fullName,
-        mobileNumber: formData.mobileNumber,
-        email: formData.email,
-        age: parseInt(formData.age),
-        gender: formData.gender,
-        selectedPlanId: formData.selectedPlanId,
-        fitnessGoal: formData.fitnessGoal,
-        address: formData.address,
-        message: formData.message
-      });
-
-      setIsSubmitted(true);
-      setTimeout(() => {
-        setIsSubmitted(false);
-        // Clear form
-        setFormData({
-          fullName: '',
-          mobileNumber: '',
-          email: '',
-          age: '',
-          gender: 'Male',
-          selectedPlanId: plans[0]?.id || '',
-          fitnessGoal: '',
-          address: '',
-          message: ''
+      setIsSubmitting(true);
+      setSubmitError(null);
+      try {
+        console.log('Membership form: Submitting request data directly to Supabase via addRequest...');
+        await addRequest({
+          fullName: formData.fullName,
+          mobileNumber: formData.mobileNumber,
+          email: formData.email,
+          age: parseInt(formData.age),
+          gender: formData.gender,
+          selectedPlanId: formData.selectedPlanId,
+          fitnessGoal: formData.fitnessGoal,
+          address: formData.address,
+          message: formData.message
         });
-        onClose();
-      }, 3000);
+        console.log('Membership form: Request successfully saved to Supabase!');
+
+        setIsSubmitted(true);
+        setTimeout(() => {
+          setIsSubmitted(false);
+          // Clear form
+          setFormData({
+            fullName: '',
+            mobileNumber: '',
+            email: '',
+            age: '',
+            gender: 'Male',
+            selectedPlanId: plans[0]?.id || '',
+            fitnessGoal: '',
+            address: '',
+            message: ''
+          });
+          onClose();
+        }, 3000);
+      } catch (err: any) {
+        console.error('Membership form submission failed with error:', err);
+        setSubmitError(err?.message || 'Database insert failed. Please check the console for more details.');
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -285,13 +299,20 @@ export const RequestForm: React.FC<RequestFormProps> = ({ isOpen, onClose, prese
               ></textarea>
             </div>
 
+            {submitError && (
+              <div className="p-4 bg-brand/10 border border-brand/20 text-brand rounded-sm text-sm font-bold">
+                {submitError}
+              </div>
+            )}
+
             {/* Submit Button */}
             <div className="pt-2">
               <button
                 type="submit"
-                className="w-full py-4 bg-brand hover:bg-white text-black font-black uppercase tracking-widest rounded-sm transition-colors duration-200 text-xs shadow-lg shadow-brand/10"
+                disabled={isSubmitting}
+                className={`w-full py-4 font-black uppercase tracking-widest rounded-sm transition-colors duration-200 text-xs shadow-lg ${isSubmitting ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed shadow-none' : 'bg-brand hover:bg-white text-black shadow-brand/10'}`}
               >
-                Submit Request
+                {isSubmitting ? 'Submitting...' : 'Submit Request'}
               </button>
             </div>
 
