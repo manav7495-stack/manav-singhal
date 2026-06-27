@@ -124,92 +124,11 @@ const defaultGallery: GalleryPhoto[] = [
   }
 ];
 
-const defaultRequests: MembershipRequest[] = [
-  {
-    id: 'req-1',
-    fullName: 'Jane Doe',
-    mobileNumber: '555-0192',
-    email: 'jane.doe@gmail.com',
-    age: 26,
-    gender: 'Female',
-    selectedPlanId: 'plan-monthly',
-    fitnessGoal: 'Improve endurance and stay active',
-    address: '456 Oak Lane, Fit City',
-    message: 'I would like to start from next Monday if possible.',
-    status: 'Pending',
-    createdAt: '2026-06-26T14:30:00Z'
-  },
-  {
-    id: 'req-2',
-    fullName: 'Mike Tyson',
-    mobileNumber: '555-1122',
-    email: 'mike.tyson@heavyweight.com',
-    age: 34,
-    gender: 'Male',
-    selectedPlanId: 'plan-yearly',
-    fitnessGoal: 'Explosive power and core stabilization',
-    address: '100 Knockout Rd, Nevada',
-    message: 'Looking for high intensity sessions.',
-    status: 'Approved',
-    createdAt: '2026-06-25T09:15:00Z'
-  }
-];
+const defaultRequests: MembershipRequest[] = [];
 
-const defaultMembers: Member[] = [
-  {
-    id: 'mem-1',
-    fullName: 'John Smith',
-    mobileNumber: '555-8822',
-    email: 'john.smith@hotmail.com',
-    age: 29,
-    gender: 'Male',
-    planId: 'plan-yearly',
-    fitnessGoal: 'Muscle Gain & Physique Transformation',
-    address: '789 Pine Road, Uptown',
-    joinedDate: '2026-06-10',
-    paymentStatus: 'Paid',
-    attendanceStatus: 'Present'
-  },
-  {
-    id: 'mem-2',
-    fullName: 'Sarah Connor',
-    mobileNumber: '555-9988',
-    email: 'sarah.connor@apocalypse.net',
-    age: 32,
-    gender: 'Female',
-    planId: 'plan-quarterly',
-    fitnessGoal: 'Tactical endurance, agility, and heavy lifting',
-    address: '888 Desert Hideout, Sector 4',
-    joinedDate: '2026-05-15',
-    paymentStatus: 'Paid',
-    attendanceStatus: 'Absent'
-  },
-  {
-    id: 'mem-3',
-    fullName: 'David Beckham',
-    mobileNumber: '555-7733',
-    email: 'david.b@legends.org',
-    age: 45,
-    gender: 'Male',
-    planId: 'plan-monthly',
-    fitnessGoal: 'Cardiovascular maintenance and core flexibility',
-    address: '10 Golden Boot Blvd, Beverly Hills',
-    joinedDate: '2026-06-20',
-    paymentStatus: 'Unpaid',
-    attendanceStatus: 'Present'
-  }
-];
+const defaultMembers: Member[] = [];
 
-const defaultContactResponses: ContactResponse[] = [
-  {
-    id: 'res-1',
-    name: 'Alice Johnson',
-    phone: '555-4422',
-    email: 'alice.j@outlook.com',
-    message: 'Hi! Do you offer any corporate discounts for groups of 10 or more? We have an office nearby on Muscle Avenue.',
-    createdAt: '2026-06-26T18:45:00Z'
-  }
-];
+const defaultContactResponses: ContactResponse[] = [];
 
 const defaultSettings: GymSettings = {
   phone: '+1 (555) 987-6543',
@@ -366,12 +285,24 @@ const GymContext = createContext<GymContextProps | undefined>(undefined);
 export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [requests, setRequests] = useState<MembershipRequest[]>(() => {
     const data = localStorage.getItem('ms_requests');
-    return data ? JSON.parse(data) : defaultRequests;
+    if (!data) return [];
+    try {
+      const parsed = JSON.parse(data) as MembershipRequest[];
+      return parsed.filter(r => r.id !== 'req-1' && r.id !== 'req-2');
+    } catch {
+      return [];
+    }
   });
 
   const [members, setMembers] = useState<Member[]>(() => {
     const data = localStorage.getItem('ms_members');
-    return data ? JSON.parse(data) : defaultMembers;
+    if (!data) return [];
+    try {
+      const parsed = JSON.parse(data) as Member[];
+      return parsed.filter(m => m.id !== 'mem-1' && m.id !== 'mem-2' && m.id !== 'mem-3');
+    } catch {
+      return [];
+    }
   });
 
   const [plans, setPlans] = useState<MembershipPlan[]>(() => {
@@ -391,7 +322,13 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [contactResponses, setContactResponses] = useState<ContactResponse[]>(() => {
     const data = localStorage.getItem('ms_contact_responses');
-    return data ? JSON.parse(data) : defaultContactResponses;
+    if (!data) return [];
+    try {
+      const parsed = JSON.parse(data) as ContactResponse[];
+      return parsed.filter(c => c.id !== 'res-1');
+    } catch {
+      return [];
+    }
   });
 
   const [settings, setSettings] = useState<GymSettings>(() => {
@@ -556,10 +493,7 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           supabase.from('about_section').upsert({
             ...defaultAbout,
             features: defaultAbout.features
-          }),
-          supabase.from('membership_requests').insert(defaultRequests),
-          supabase.from('members').insert(defaultMembers),
-          supabase.from('contact_responses').insert(defaultContactResponses)
+          })
         ]);
 
         console.log('Successfully seeded Supabase!');
