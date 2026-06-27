@@ -8,7 +8,7 @@ interface HeroProps {
 }
 
 export const Hero: React.FC<HeroProps> = ({ onJoinClick, onViewPlansClick }) => {
-  const { settings } = useGym();
+  const { settings, hero } = useGym();
 
   const handleWhatsAppClick = () => {
     const message = encodeURIComponent("Hi MS Fitness! I am interested in joining your gym. Please share more details.");
@@ -53,14 +53,14 @@ export const Hero: React.FC<HeroProps> = ({ onJoinClick, onViewPlansClick }) => 
       {/* Main Hero Banner */}
       <div className="relative min-h-[calc(100vh-120px)] flex items-center">
         {/* Huge Decorative "GYM" Watermark Background */}
-        <div className="absolute top-1/2 left-8 md:left-20 -translate-y-1/2 text-brand opacity-5 font-black text-[120px] sm:text-[220px] lg:text-[320px] leading-none select-none z-0 tracking-tighter italic">
-          GYM
+        <div className="absolute top-1/2 left-8 md:left-20 -translate-y-1/2 text-brand opacity-5 font-black text-[120px] sm:text-[220px] lg:text-[320px] leading-none select-none z-0 tracking-tighter italic uppercase">
+          {hero.watermark}
         </div>
 
         {/* Dark Background Overlay Image */}
         <div className="absolute inset-0 z-0">
           <img 
-            src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&q=80&w=1920" 
+            src={hero.image_url} 
             alt="MS Fitness Premium Gym Background" 
             className="w-full h-full object-cover opacity-20 object-center"
             referrerPolicy="no-referrer"
@@ -75,18 +75,17 @@ export const Hero: React.FC<HeroProps> = ({ onJoinClick, onViewPlansClick }) => 
             {/* Visual Accent */}
             <div className="inline-flex items-center space-x-2 bg-brand/10 border border-brand/30 text-brand px-3.5 py-1.5 rounded-sm text-[10px] font-black uppercase tracking-widest mb-6">
               <span className="w-2 h-2 rounded-full bg-brand animate-pulse"></span>
-              <span>ESTABLISHED MMXXIV • Premium Luxury Club</span>
+              <span>{hero.badge_text}</span>
             </div>
 
             {/* Headline */}
-            <h1 className="font-sans font-black text-6xl sm:text-7xl lg:text-[100px] tracking-tighter text-white mb-8 uppercase leading-[0.85] italic">
-              Forge your <br />
-              <span className="text-stroke-white text-transparent">Legacy</span>
+            <h1 className="font-sans font-black text-6xl sm:text-7xl lg:text-[100px] tracking-tighter text-white mb-8 uppercase leading-[0.85] italic whitespace-pre-line">
+              {hero.title}
             </h1>
 
             {/* Sub-headline */}
             <p className="font-sans text-zinc-400 text-base sm:text-lg lg:text-xl mb-10 leading-relaxed max-w-xl">
-              Welcome to <span className="text-white font-extrabold">MS Fitness</span>. Experience premier equipment, legendary trainers, and an elite community designed to push your biological limits.
+              {hero.subtitle}
             </p>
 
             {/* Actions */}
@@ -95,7 +94,7 @@ export const Hero: React.FC<HeroProps> = ({ onJoinClick, onViewPlansClick }) => 
                 onClick={onJoinClick}
                 className="group flex items-center justify-center space-x-2 px-8 py-4 bg-brand hover:bg-white text-black font-black text-base uppercase tracking-widest italic rounded-sm transition-colors duration-200"
               >
-                <span>Join Now</span>
+                <span>{hero.button_text_1}</span>
                 <ChevronRight size={18} className="transform group-hover:translate-x-1 transition-transform" />
               </button>
               
@@ -104,22 +103,22 @@ export const Hero: React.FC<HeroProps> = ({ onJoinClick, onViewPlansClick }) => 
                 className="flex items-center justify-center space-x-2 px-8 py-4 bg-transparent border-2 border-white text-white font-black text-base uppercase tracking-widest italic rounded-sm hover:bg-white hover:text-black transition-colors duration-200"
               >
                 <Play size={14} className="fill-current text-current" />
-                <span>View Plans</span>
+                <span>{hero.button_text_2}</span>
               </button>
             </div>
 
             {/* Highlights/Badges */}
             <div className="grid grid-cols-3 gap-4 sm:gap-12 mt-16 pt-8 border-t border-zinc-900 max-w-xl">
               <div>
-                <div className="font-sans font-black text-3xl sm:text-4xl text-white">10k+</div>
+                <div className="font-sans font-black text-3xl sm:text-4xl text-white">{hero.area_stat}</div>
                 <div className="font-sans text-zinc-500 text-[10px] uppercase font-bold tracking-widest mt-1">Sq. Ft. Area</div>
               </div>
               <div>
-                <div className="font-sans font-black text-3xl sm:text-4xl text-brand">20+</div>
+                <div className="font-sans font-black text-3xl sm:text-4xl text-brand">{hero.coaches_stat}</div>
                 <div className="font-sans text-zinc-500 text-[10px] uppercase font-bold tracking-widest mt-1">Elite Coaches</div>
               </div>
               <div>
-                <div className="font-sans font-black text-3xl sm:text-4xl text-white">24/7</div>
+                <div className="font-sans font-black text-3xl sm:text-4xl text-white">{hero.access_stat}</div>
                 <div className="font-sans text-zinc-500 text-[10px] uppercase font-bold tracking-widest mt-1">Gym Access</div>
               </div>
             </div>
@@ -131,3 +130,4 @@ export const Hero: React.FC<HeroProps> = ({ onJoinClick, onViewPlansClick }) => 
     </div>
   );
 };
+

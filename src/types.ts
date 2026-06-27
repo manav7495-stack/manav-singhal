@@ -77,3 +77,52 @@ export interface GymSettings {
   instagramUrl?: string;
   workingHours?: string;
 }
+
+export interface Trainer {
+  id: string;
+  name: string;
+  role: string;
+  specialty: string;
+  bio: string;
+  image_url: string;
+}
+
+export interface Testimonial {
+  id: string;
+  name: string;
+  role: string;
+  achievement: string;
+  quote: string;
+  rating: number;
+}
+
+export interface HeroSection {
+  id: string;
+  title: string;
+  subtitle: string;
+  watermark: string;
+  image_url: string;
+  button_text_1: string;
+  button_text_2: string;
+  badge_text: string;
+  area_stat: string;
+  coaches_stat: string;
+  access_stat: string;
+}
+
+export interface AboutSectionFeature {
+  title: string;
+  desc: string;
+  icon: string;
+}
+
+export interface AboutSection {
+  id: string;
+  title: string;
+  subtitle: string;
+  description_1: string;
+  description_2: string;
+  image_url: string;
+  quote: string;
+  features: AboutSectionFeature[];
+}

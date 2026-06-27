@@ -1,43 +1,10 @@
 import React from 'react';
 import { Star, Quote } from 'lucide-react';
-
-interface Testimonial {
-  id: string;
-  name: string;
-  role: string;
-  achievement: string;
-  quote: string;
-  rating: number;
-}
-
-const testimonials: Testimonial[] = [
-  {
-    id: 'test-1',
-    name: 'Marcus Brody',
-    role: 'Member since 2024',
-    achievement: 'Lost 45 lbs & gained extreme strength',
-    quote: "The culture here is electric. It is not just about showing up; the trainers actively correct your forms, the equipment is always pristine, and the community supports your daily grind. Joining MS Fitness completely changed my lifestyle.",
-    rating: 5
-  },
-  {
-    id: 'test-2',
-    name: 'Natasha Romanoff',
-    role: 'Member since 2025',
-    achievement: 'Mastered Olympic lifts & core stability',
-    quote: "As an active endurance athlete, I needed a gym that had serious equipment and professional coaches. MS Fitness exceeds all metrics. The layout is optimized, the acoustics are great, and the steam room is perfect for post-workout recovery.",
-    rating: 5
-  },
-  {
-    id: 'test-3',
-    name: 'Rohan Sharma',
-    role: 'Member since 2026',
-    achievement: 'Gained 15 lbs of pure lean muscle mass',
-    quote: "The Yearly Plan is worth every penny! Having a dedicated personal coach and automated macro nutrition plans removed all the guesswork. Highly recommend MS Fitness to anyone looking for premium progression.",
-    rating: 5
-  }
-];
+import { useGym } from '../context/GymContext';
 
 export const Testimonials: React.FC = () => {
+  const { testimonials } = useGym();
+
   return (
     <section id="testimonials" className="py-24 bg-zinc-950 text-white relative overflow-hidden border-t border-zinc-900">
       
@@ -108,3 +75,4 @@ export const Testimonials: React.FC = () => {
     </section>
   );
 };
+

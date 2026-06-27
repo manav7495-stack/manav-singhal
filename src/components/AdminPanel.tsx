@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Lock, LayoutDashboard, UserCheck, Users, Dumbbell, 
   Image, Megaphone, MessageSquare, Settings, LogOut, 
   CheckCircle, XCircle, Plus, Trash2, Edit2, ShieldAlert,
-  Save, Eye, Calendar, Mail, Phone, Info
+  Save, Eye, Calendar, Mail, Phone, Info, Award, Star, Flame
 } from 'lucide-react';
 import { useGym } from '../context/GymContext';
-import { Member, MembershipPlan, Announcement, GalleryPhoto, GymSettings, RequestStatus, PaymentStatus, AttendanceStatus, Gender, AnnouncementType } from '../types';
+import { Member, MembershipPlan, Announcement, GalleryPhoto, GymSettings, RequestStatus, PaymentStatus, AttendanceStatus, Gender, AnnouncementType, Trainer, Testimonial, HeroSection, AboutSection } from '../types';
 
 interface AdminPanelProps {
   onLoginSuccess: () => void;
@@ -14,7 +14,7 @@ interface AdminPanelProps {
   isAdminLoggedIn: boolean;
 }
 
-type AdminTab = 'dashboard' | 'requests' | 'members' | 'plans' | 'gallery' | 'announcements' | 'responses' | 'settings';
+type AdminTab = 'dashboard' | 'requests' | 'members' | 'plans' | 'gallery' | 'announcements' | 'responses' | 'settings' | 'hero' | 'about' | 'testimonials' | 'trainers';
 
 export const AdminPanel: React.FC<AdminPanelProps> = ({ 
   onLoginSuccess, 
@@ -28,7 +28,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     announcements, addAnnouncement, updateAnnouncement, deleteAnnouncement,
     gallery, addGalleryPhoto, updateGalleryPhoto, deleteGalleryPhoto,
     contactResponses, deleteContactResponse,
-    settings, updateSettings
+    settings, updateSettings,
+    trainers, addTrainer, updateTrainer, deleteTrainer,
+    testimonials, addTestimonial, updateTestimonial, deleteTestimonial,
+    hero, updateHero,
+    about, updateAbout
   } = useGym();
 
   // Login Form State
@@ -68,6 +72,35 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
   // Settings Form
   const [settingsForm, setSettingsForm] = useState<GymSettings>({ ...settings });
+
+  // Trainers Form
+  const [trainerForm, setTrainerForm] = useState({
+    name: '', role: '', specialty: '', bio: '', image_url: ''
+  });
+
+  // Testimonials Form
+  const [testimonialForm, setTestimonialForm] = useState({
+    name: '', role: '', achievement: '', quote: '', rating: 5
+  });
+
+  // Hero Section Form
+  const [heroForm, setHeroForm] = useState<HeroSection>({ ...hero });
+
+  // About Section Form
+  const [aboutForm, setAboutForm] = useState<AboutSection>({ ...about });
+
+  // Synchronize form states when database context updates
+  useEffect(() => {
+    setSettingsForm({ ...settings });
+  }, [settings]);
+
+  useEffect(() => {
+    setHeroForm({ ...hero });
+  }, [hero]);
+
+  useEffect(() => {
+    setAboutForm({ ...about });
+  }, [about]);
 
   // Handle Admin Login
   const handleAdminLogin = (e: React.FormEvent) => {
@@ -241,6 +274,96 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     setModalType(null);
   };
 
+  // Helper: Open Trainer Modal
+  const openTrainerModal = (type: 'add' | 'edit', t?: Trainer) => {
+    setModalType(type);
+    if (type === 'edit' && t) {
+      setEditingId(t.id);
+      setTrainerForm({
+        name: t.name, role: t.role, specialty: t.specialty, bio: t.bio, image_url: t.image_url
+      });
+    } else {
+      setEditingId(null);
+      setTrainerForm({
+        name: '', role: '', specialty: '', bio: '', image_url: ''
+      });
+    }
+  };
+
+  const handleTrainerSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!trainerForm.name || !trainerForm.role) {
+      alert('Name and Role are required.');
+      return;
+    }
+    const trainerData = {
+      name: trainerForm.name,
+      role: trainerForm.role,
+      specialty: trainerForm.specialty,
+      bio: trainerForm.bio,
+      image_url: trainerForm.image_url
+    };
+
+    if (modalType === 'edit' && editingId) {
+      updateTrainer({ ...trainerData, id: editingId });
+    } else {
+      addTrainer(trainerData);
+    }
+    setModalType(null);
+  };
+
+  // Helper: Open Testimonial Modal
+  const openTestimonialModal = (type: 'add' | 'edit', t?: Testimonial) => {
+    setModalType(type);
+    if (type === 'edit' && t) {
+      setEditingId(t.id);
+      setTestimonialForm({
+        name: t.name, role: t.role, achievement: t.achievement, quote: t.quote, rating: t.rating
+      });
+    } else {
+      setEditingId(null);
+      setTestimonialForm({
+        name: '', role: '', achievement: '', quote: '', rating: t.rating || 5
+      });
+    }
+  };
+
+  const handleTestimonialSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!testimonialForm.name || !testimonialForm.quote) {
+      alert('Name and Quote are required.');
+      return;
+    }
+    const testimonialData = {
+      name: testimonialForm.name,
+      role: testimonialForm.role,
+      achievement: testimonialForm.achievement,
+      quote: testimonialForm.quote,
+      rating: testimonialForm.rating
+    };
+
+    if (modalType === 'edit' && editingId) {
+      updateTestimonial({ ...testimonialData, id: editingId });
+    } else {
+      addTestimonial(testimonialData);
+    }
+    setModalType(null);
+  };
+
+  // Handle Hero Submit
+  const handleHeroSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    updateHero(heroForm);
+    alert('Hero Section successfully updated & synchronized!');
+  };
+
+  // Handle About Submit
+  const handleAboutSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    updateAbout(aboutForm);
+    alert('About Section successfully updated & synchronized!');
+  };
+
   // Handle Settings Submit
   const handleSettingsSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -407,6 +530,38 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 >
                   <Settings size={18} />
                   <span>Gym Settings</span>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab('hero')}
+                  className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${activeTab === 'hero' ? 'bg-red-600 text-white font-bold' : 'text-zinc-400 hover:text-white hover:bg-zinc-950'}`}
+                >
+                  <Eye size={18} />
+                  <span>Hero Section</span>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab('about')}
+                  className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${activeTab === 'about' ? 'bg-red-600 text-white font-bold' : 'text-zinc-400 hover:text-white hover:bg-zinc-950'}`}
+                >
+                  <Award size={18} />
+                  <span>About Section</span>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab('trainers')}
+                  className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${activeTab === 'trainers' ? 'bg-red-600 text-white font-bold' : 'text-zinc-400 hover:text-white hover:bg-zinc-950'}`}
+                >
+                  <Flame size={18} />
+                  <span>Manage Trainers</span>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab('testimonials')}
+                  className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${activeTab === 'testimonials' ? 'bg-red-600 text-white font-bold' : 'text-zinc-400 hover:text-white hover:bg-zinc-950'}`}
+                >
+                  <Star size={18} />
+                  <span>Testimonials</span>
                 </button>
               </nav>
             </div>
@@ -1020,6 +1175,322 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               </div>
             )}
 
+            {/* TAB: HERO SECTION */}
+            {activeTab === 'hero' && (
+              <div className="space-y-6 max-w-2xl">
+                <div>
+                  <h1 className="font-sans font-black text-2xl sm:text-4xl uppercase text-white">Hero Section</h1>
+                  <p className="text-zinc-400 text-xs sm:text-sm mt-1">Configure landing banners, slogans, and stats.</p>
+                </div>
+                <form onSubmit={handleHeroSubmit} className="p-6 sm:p-8 bg-zinc-900 border border-zinc-850 rounded-2xl space-y-6">
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">Hero Title</label>
+                    <textarea 
+                      rows={2}
+                      value={heroForm.title}
+                      onChange={(e) => setHeroForm({ ...heroForm, title: e.target.value })}
+                      className="w-full px-4 py-3 bg-zinc-950 border border-zinc-800 rounded-xl text-white text-sm focus:outline-none focus:border-red-500 transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">Hero Subtitle</label>
+                    <textarea 
+                      rows={3}
+                      value={heroForm.subtitle}
+                      onChange={(e) => setHeroForm({ ...heroForm, subtitle: e.target.value })}
+                      className="w-full px-4 py-3 bg-zinc-950 border border-zinc-800 rounded-xl text-white text-sm focus:outline-none focus:border-red-500 transition-colors"
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">Background Image URL</label>
+                      <input 
+                        type="text"
+                        value={heroForm.image_url}
+                        onChange={(e) => setHeroForm({ ...heroForm, image_url: e.target.value })}
+                        className="w-full px-4 py-3 bg-zinc-950 border border-zinc-800 rounded-xl text-white text-sm focus:outline-none focus:border-red-500 transition-colors"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">Watermark Text</label>
+                      <input 
+                        type="text"
+                        value={heroForm.watermark}
+                        onChange={(e) => setHeroForm({ ...heroForm, watermark: e.target.value })}
+                        className="w-full px-4 py-3 bg-zinc-950 border border-zinc-800 rounded-xl text-white text-sm focus:outline-none focus:border-red-500 transition-colors"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">Area Stat</label>
+                      <input 
+                        type="text"
+                        value={heroForm.area_stat}
+                        onChange={(e) => setHeroForm({ ...heroForm, area_stat: e.target.value })}
+                        className="w-full px-4 py-3 bg-zinc-950 border border-zinc-800 rounded-xl text-white text-sm focus:outline-none focus:border-red-500 transition-colors"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">Coaches Stat</label>
+                      <input 
+                        type="text"
+                        value={heroForm.coaches_stat}
+                        onChange={(e) => setHeroForm({ ...heroForm, coaches_stat: e.target.value })}
+                        className="w-full px-4 py-3 bg-zinc-950 border border-zinc-800 rounded-xl text-white text-sm focus:outline-none focus:border-red-500 transition-colors"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">Access Stat</label>
+                      <input 
+                        type="text"
+                        value={heroForm.access_stat}
+                        onChange={(e) => setHeroForm({ ...heroForm, access_stat: e.target.value })}
+                        className="w-full px-4 py-3 bg-zinc-950 border border-zinc-800 rounded-xl text-white text-sm focus:outline-none focus:border-red-500 transition-colors"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <button
+                      type="submit"
+                      className="w-full py-3.5 bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-wider rounded-xl transition-all shadow-md text-xs sm:text-sm hover:scale-[1.01]"
+                    >
+                      Save Hero Section
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+
+            {/* TAB: ABOUT SECTION */}
+            {activeTab === 'about' && (
+              <div className="space-y-6 max-w-2xl">
+                <div>
+                  <h1 className="font-sans font-black text-2xl sm:text-4xl uppercase text-white">About Section</h1>
+                  <p className="text-zinc-400 text-xs sm:text-sm mt-1">Configure section narrative, core values, and quotes.</p>
+                </div>
+                <form onSubmit={handleAboutSubmit} className="p-6 sm:p-8 bg-zinc-900 border border-zinc-850 rounded-2xl space-y-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">Title Accent</label>
+                      <input 
+                        type="text"
+                        value={aboutForm.title}
+                        onChange={(e) => setAboutForm({ ...aboutForm, title: e.target.value })}
+                        className="w-full px-4 py-3 bg-zinc-950 border border-zinc-800 rounded-xl text-white text-sm focus:outline-none focus:border-red-500 transition-colors"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">Subtitle Header</label>
+                      <input 
+                        type="text"
+                        value={aboutForm.subtitle}
+                        onChange={(e) => setAboutForm({ ...aboutForm, subtitle: e.target.value })}
+                        className="w-full px-4 py-3 bg-zinc-950 border border-zinc-800 rounded-xl text-white text-sm focus:outline-none focus:border-red-500 transition-colors"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">Description Paragraph 1</label>
+                    <textarea 
+                      rows={3}
+                      value={aboutForm.description_1}
+                      onChange={(e) => setAboutForm({ ...aboutForm, description_1: e.target.value })}
+                      className="w-full px-4 py-3 bg-zinc-950 border border-zinc-800 rounded-xl text-white text-sm focus:outline-none focus:border-red-500 transition-colors resize-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">Description Paragraph 2</label>
+                    <textarea 
+                      rows={2}
+                      value={aboutForm.description_2}
+                      onChange={(e) => setAboutForm({ ...aboutForm, description_2: e.target.value })}
+                      className="w-full px-4 py-3 bg-zinc-950 border border-zinc-800 rounded-xl text-white text-sm focus:outline-none focus:border-red-500 transition-colors resize-none"
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">Intro Banner Image</label>
+                      <input 
+                        type="text"
+                        value={aboutForm.image_url}
+                        onChange={(e) => setAboutForm({ ...aboutForm, image_url: e.target.value })}
+                        className="w-full px-4 py-3 bg-zinc-950 border border-zinc-800 rounded-xl text-white text-sm focus:outline-none focus:border-red-500 transition-colors"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">Highlight Quote</label>
+                      <input 
+                        type="text"
+                        value={aboutForm.quote}
+                        onChange={(e) => setAboutForm({ ...aboutForm, quote: e.target.value })}
+                        className="w-full px-4 py-3 bg-zinc-950 border border-zinc-800 rounded-xl text-white text-sm focus:outline-none focus:border-red-500 transition-colors"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="border-t border-zinc-800 pt-6 space-y-4">
+                    <h3 className="text-sm font-bold uppercase text-white tracking-wider">Feature Accreditations</h3>
+                    {aboutForm.features?.map((feat, idx) => (
+                      <div key={idx} className="p-4 bg-zinc-950 border border-zinc-850 rounded-xl space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold text-red-500 uppercase tracking-widest">Card #{idx + 1} ({feat.icon})</span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <input 
+                            type="text" 
+                            placeholder="Feature Slogan" 
+                            value={feat.title} 
+                            onChange={(e) => {
+                              const updatedFeatures = [...aboutForm.features];
+                              updatedFeatures[idx] = { ...feat, title: e.target.value };
+                              setAboutForm({ ...aboutForm, features: updatedFeatures });
+                            }}
+                            className="w-full px-3 py-2.5 bg-zinc-900 border border-zinc-800 rounded-lg text-white text-xs focus:outline-none focus:border-red-500"
+                          />
+                          <input 
+                            type="text" 
+                            placeholder="Feature brief description" 
+                            value={feat.desc} 
+                            onChange={(e) => {
+                              const updatedFeatures = [...aboutForm.features];
+                              updatedFeatures[idx] = { ...feat, desc: e.target.value };
+                              setAboutForm({ ...aboutForm, features: updatedFeatures });
+                            }}
+                            className="w-full px-3 py-2.5 bg-zinc-900 border border-zinc-800 rounded-lg text-white text-xs focus:outline-none focus:border-red-500"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div>
+                    <button
+                      type="submit"
+                      className="w-full py-3.5 bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-wider rounded-xl transition-all shadow-md text-xs sm:text-sm hover:scale-[1.01]"
+                    >
+                      Save About Section
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+
+            {/* TAB: TRAINERS */}
+            {activeTab === 'trainers' && (
+              <div className="space-y-6">
+                <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+                  <div>
+                    <h1 className="font-sans font-black text-2xl sm:text-4xl uppercase text-white">Manage Trainers</h1>
+                    <p className="text-zinc-400 text-xs sm:text-sm mt-1">Configure the roster of MS Fitness elite certified personal coaches.</p>
+                  </div>
+                  <button
+                    onClick={() => openTrainerModal('add')}
+                    className="inline-flex items-center justify-center space-x-1.5 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-xs uppercase tracking-wide transition-all"
+                  >
+                    <Plus size={14} />
+                    <span>Add Trainer</span>
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {trainers.map(tr => (
+                    <div key={tr.id} className="p-5 bg-zinc-900 border border-zinc-850 rounded-2xl flex flex-col sm:flex-row gap-5 items-center">
+                      <img src={tr.image_url} alt={tr.name} className="w-24 h-24 rounded-full object-cover border-2 border-red-600 flex-shrink-0" />
+                      <div className="space-y-2 flex-1 text-center sm:text-left">
+                        <div>
+                          <h4 className="font-sans font-black text-lg uppercase text-white tracking-wide">{tr.name}</h4>
+                          <span className="text-xs text-red-500 font-bold uppercase">{tr.role}</span>
+                        </div>
+                        <p className="text-zinc-400 text-xs line-clamp-2 leading-relaxed">{tr.bio}</p>
+                        <div className="text-[10px] text-zinc-500"><span className="font-bold text-zinc-400">Specialty:</span> {tr.specialty}</div>
+                      </div>
+
+                      <div className="flex sm:flex-col space-x-2 sm:space-x-0 sm:space-y-2 flex-shrink-0 self-center">
+                        <button
+                          onClick={() => openTrainerModal('edit', tr)}
+                          className="p-2 bg-zinc-950 hover:bg-zinc-800 text-zinc-400 hover:text-white rounded border border-zinc-850"
+                        >
+                          <Edit2 size={13} />
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (confirm(`Delete trainer ${tr.name}?`)) deleteTrainer(tr.id);
+                          }}
+                          className="p-2 bg-zinc-950 hover:bg-rose-950 hover:text-rose-400 text-zinc-500 rounded border border-zinc-850"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* TAB: TESTIMONIALS */}
+            {activeTab === 'testimonials' && (
+              <div className="space-y-6">
+                <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+                  <div>
+                    <h1 className="font-sans font-black text-2xl sm:text-4xl uppercase text-white">Member Testimonials</h1>
+                    <p className="text-zinc-400 text-xs sm:text-sm mt-1">Configure and publish verified member physical progression success stories.</p>
+                  </div>
+                  <button
+                    onClick={() => openTestimonialModal('add')}
+                    className="inline-flex items-center justify-center space-x-1.5 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-xs uppercase tracking-wide transition-all"
+                  >
+                    <Plus size={14} />
+                    <span>Add Review</span>
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {testimonials.map(test => (
+                    <div key={test.id} className="p-6 bg-zinc-900 border border-zinc-850 rounded-2xl space-y-4">
+                      <div className="flex items-center justify-between border-b border-zinc-850 pb-3">
+                        <div>
+                          <h4 className="font-sans font-black text-base text-white uppercase">{test.name}</h4>
+                          <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mt-0.5">{test.role}</p>
+                        </div>
+                        <div className="flex items-center text-red-500 space-x-0.5">
+                          {Array.from({ length: test.rating }).map((_, i) => (
+                            <Star key={i} size={11} className="fill-red-500" />
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <span className="inline-block px-2.5 py-0.5 bg-red-600/10 text-red-400 border border-red-900/20 text-[9px] font-bold uppercase tracking-widest rounded">
+                          {test.achievement}
+                        </span>
+                        <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed italic">
+                          "{test.quote}"
+                        </p>
+                      </div>
+
+                      <div className="flex justify-end space-x-2 pt-2 border-t border-zinc-850">
+                        <button
+                          onClick={() => openTestimonialModal('edit', test)}
+                          className="px-2.5 py-1.5 bg-zinc-950 hover:bg-zinc-800 text-zinc-300 text-xs rounded font-bold border border-zinc-850"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (confirm(`Delete this testimonial?`)) deleteTestimonial(test.id);
+                          }}
+                          className="px-2.5 py-1.5 bg-zinc-950 hover:bg-rose-950 text-rose-400 text-xs rounded font-bold border border-zinc-850"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
           </main>
 
           {/* GENERAL DIALOG MODALS OVERLAYS */}
@@ -1344,8 +1815,168 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             </div>
           )}
 
+          {/* 5. Trainer Modal */}
+          {modalType && (activeTab === 'trainers') && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
+              <div className="bg-zinc-950 border border-zinc-800 rounded-3xl p-6 sm:p-10 w-full max-w-md text-white">
+                <div className="flex justify-between items-center pb-4 border-b border-zinc-850 mb-6">
+                  <h3 className="font-sans font-black text-xl uppercase tracking-wide">
+                    {modalType === 'edit' ? 'Edit Trainer Details' : 'Add New Trainer'}
+                  </h3>
+                  <button onClick={() => setModalType(null)} className="text-zinc-500 hover:text-white">✕</button>
+                </div>
+
+                <form onSubmit={handleTrainerSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold uppercase text-zinc-400 mb-1">Trainer Name *</label>
+                    <input 
+                      type="text" required
+                      value={trainerForm.name}
+                      onChange={(e) => setTrainerForm({ ...trainerForm, name: e.target.value })}
+                      placeholder="e.g. Coach Alex Carter"
+                      className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-xl text-white text-sm focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold uppercase text-zinc-400 mb-1">Role / Certification *</label>
+                    <input 
+                      type="text" required
+                      value={trainerForm.role}
+                      onChange={(e) => setTrainerForm({ ...trainerForm, role: e.target.value })}
+                      placeholder="e.g. Master Powerlifting Coach"
+                      className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-xl text-white text-sm focus:outline-none"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold uppercase text-zinc-400 mb-1">Specialties</label>
+                      <input 
+                        type="text"
+                        value={trainerForm.specialty}
+                        onChange={(e) => setTrainerForm({ ...trainerForm, specialty: e.target.value })}
+                        placeholder="e.g. Strength, Nutrition"
+                        className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-xl text-white text-sm focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold uppercase text-zinc-400 mb-1">Image URL</label>
+                      <input 
+                        type="url"
+                        value={trainerForm.image_url}
+                        onChange={(e) => setTrainerForm({ ...trainerForm, image_url: e.target.value })}
+                        placeholder="https://..."
+                        className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-xl text-white text-sm focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold uppercase text-zinc-400 mb-1">Biography / Tagline</label>
+                    <textarea 
+                      rows={3}
+                      value={trainerForm.bio}
+                      onChange={(e) => setTrainerForm({ ...trainerForm, bio: e.target.value })}
+                      placeholder="e.g. 8+ years coaching champions..."
+                      className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-xl text-white text-sm focus:outline-none resize-none"
+                    ></textarea>
+                  </div>
+
+                  <div className="pt-4 border-t border-zinc-850 flex justify-end space-x-2">
+                    <button type="button" onClick={() => setModalType(null)} className="px-4 py-2 rounded bg-zinc-800 text-xs">Cancel</button>
+                    <button type="submit" className="px-4 py-2 bg-red-600 rounded text-xs font-bold">Save Trainer</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* 6. Testimonial Modal */}
+          {modalType && (activeTab === 'testimonials') && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
+              <div className="bg-zinc-950 border border-zinc-800 rounded-3xl p-6 sm:p-10 w-full max-w-md text-white">
+                <div className="flex justify-between items-center pb-4 border-b border-zinc-850 mb-6">
+                  <h3 className="font-sans font-black text-xl uppercase tracking-wide">
+                    {modalType === 'edit' ? 'Edit Testimonial' : 'Add New Testimonial'}
+                  </h3>
+                  <button onClick={() => setModalType(null)} className="text-zinc-500 hover:text-white">✕</button>
+                </div>
+
+                <form onSubmit={handleTestimonialSubmit} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold uppercase text-zinc-400 mb-1">Member Name *</label>
+                      <input 
+                        type="text" required
+                        value={testimonialForm.name}
+                        onChange={(e) => setTestimonialForm({ ...testimonialForm, name: e.target.value })}
+                        placeholder="Marcus Brody"
+                        className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-xl text-white text-sm focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold uppercase text-zinc-400 mb-1">Role / Tenure</label>
+                      <input 
+                        type="text"
+                        value={testimonialForm.role}
+                        onChange={(e) => setTestimonialForm({ ...testimonialForm, role: e.target.value })}
+                        placeholder="Member since 2024"
+                        className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-xl text-white text-sm focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold uppercase text-zinc-400 mb-1">Heroic Achievement</label>
+                      <input 
+                        type="text"
+                        value={testimonialForm.achievement}
+                        onChange={(e) => setTestimonialForm({ ...testimonialForm, achievement: e.target.value })}
+                        placeholder="e.g. Gained 15 lbs muscle"
+                        className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-xl text-white text-sm focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold uppercase text-zinc-400 mb-1">Rating (1 to 5 Stars)</label>
+                      <select 
+                        value={testimonialForm.rating}
+                        onChange={(e) => setTestimonialForm({ ...testimonialForm, rating: Number(e.target.value) })}
+                        className="w-full px-3 py-2.5 bg-zinc-900 border border-zinc-800 rounded-xl text-white text-sm focus:outline-none"
+                      >
+                        <option value={5}>5 Stars</option>
+                        <option value={4}>4 Stars</option>
+                        <option value={3}>3 Stars</option>
+                        <option value={2}>2 Stars</option>
+                        <option value={1}>1 Star</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold uppercase text-zinc-400 mb-1">Quote Description *</label>
+                    <textarea 
+                      rows={4} required
+                      value={testimonialForm.quote}
+                      onChange={(e) => setTestimonialForm({ ...testimonialForm, quote: e.target.value })}
+                      placeholder="Write review testimonial content..."
+                      className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-xl text-white text-sm focus:outline-none resize-none"
+                    ></textarea>
+                  </div>
+
+                  <div className="pt-4 border-t border-zinc-850 flex justify-end space-x-2">
+                    <button type="button" onClick={() => setModalType(null)} className="px-4 py-2 rounded bg-zinc-800 text-xs">Cancel</button>
+                    <button type="submit" className="px-4 py-2 bg-red-600 rounded text-xs font-bold">Save Review</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
         </div>
       )}
     </div>
   );
 };
+

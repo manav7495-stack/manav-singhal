@@ -6,8 +6,13 @@ import {
   Announcement, 
   GalleryPhoto, 
   ContactResponse, 
-  GymSettings 
+  GymSettings,
+  Trainer,
+  Testimonial,
+  HeroSection,
+  AboutSection
 } from '../types';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
 // Seed Data
 const defaultPlans: MembershipPlan[] = [
@@ -217,6 +222,82 @@ const defaultSettings: GymSettings = {
   workingHours: 'Mon - Fri: 5:00 AM - 10:00 PM | Sat - Sun: 7:00 AM - 8:00 PM'
 };
 
+const defaultTrainers: Trainer[] = [
+  {
+    id: 'tr-1',
+    name: 'Coach Mike Tyson',
+    role: 'Elite Strength Coach',
+    specialty: 'Explosive Power & Conditioning',
+    bio: 'Accredited specialist in high-performance metabolic training, powerlifting form corrections, and elite competition prep.',
+    image_url: 'https://images.unsplash.com/photo-1567013127542-490d757e51fc?auto=format&fit=crop&q=80&w=600'
+  },
+  {
+    id: 'tr-2',
+    name: 'Coach Sarah Connor',
+    role: 'HIIT & Group Instructor',
+    specialty: 'Endurance & Tactical Agility',
+    bio: 'Dynamic aerobic flow choreographer, circuit trainer, and group motivation driver with a 100% transformation track record.',
+    image_url: 'https://images.unsplash.com/photo-1548690312-e3b507d8c110?auto=format&fit=crop&q=80&w=600'
+  }
+];
+
+const defaultTestimonials: Testimonial[] = [
+  {
+    id: 'test-1',
+    name: 'Marcus Brody',
+    role: 'Member since 2024',
+    achievement: 'Lost 45 lbs & gained extreme strength',
+    quote: "The culture here is electric. It is not just about showing up; the trainers actively correct your forms, the equipment is always pristine, and the community supports your daily grind. Joining MS Fitness completely changed my lifestyle.",
+    rating: 5
+  },
+  {
+    id: 'test-2',
+    name: 'Natasha Romanoff',
+    role: 'Member since 2025',
+    achievement: 'Mastered Olympic lifts & core stability',
+    quote: "As an active endurance athlete, I needed a gym that had serious equipment and professional coaches. MS Fitness exceeds all metrics. The layout is optimized, the acoustics are great, and the steam room is perfect for post-workout recovery.",
+    rating: 5
+  },
+  {
+    id: 'test-3',
+    name: 'Rohan Sharma',
+    role: 'Member since 2026',
+    achievement: 'Gained 15 lbs of pure lean muscle mass',
+    quote: "The Yearly Plan is worth every penny! Having a dedicated personal coach and automated macro nutrition plans removed all the guesswork. Highly recommend MS Fitness to anyone looking for premium progression.",
+    rating: 5
+  }
+];
+
+const defaultHero: HeroSection = {
+  id: 'primary',
+  title: 'Forge your Legacy',
+  subtitle: 'Welcome to MS Fitness. Experience premier equipment, legendary trainers, and an elite community designed to push your biological limits.',
+  watermark: 'GYM',
+  image_url: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&q=80&w=1920',
+  button_text_1: 'Join Now',
+  button_text_2: 'View Plans',
+  badge_text: 'ESTABLISHED MMXXIV • Premium Luxury Club',
+  area_stat: '10k+',
+  coaches_stat: '20+',
+  access_stat: '24/7'
+};
+
+const defaultAbout: AboutSection = {
+  id: 'primary',
+  title: 'Who We Are',
+  subtitle: 'ABOUT MS FITNESS',
+  description_1: "Founded in MMXXIV, MS Fitness is Fit City's gold-standard athletic temple. We provide a space where high-intensity strength conditioning meets meticulous luxury amenities. From custom Hammer Strength equipment to individualized macro nutrition consulting, we have spared no expense.",
+  description_2: "Our elite certified strength coaches and nutritional consultants are dedicated to helping you forge your legacy.",
+  image_url: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?auto=format&fit=crop&q=80&w=800',
+  quote: "At MS Fitness, we do not just lift weights — we elevate lifestyles, forge mental fortitude, and sculpt champions.",
+  features: [
+    { title: "Elite Cleanliness & Safety", desc: "Medical-grade air filtration and 24/7 dedicated sanitization crew.", icon: "Shield" },
+    { title: "Certified Specialists", desc: "Every coach holds accredited international athletic certifications.", icon: "Award" },
+    { title: "Immersive Atmosphere", desc: "Great acoustics, premium spacing, and zero-judgment community.", icon: "Users" },
+    { title: "Proven Success Loops", desc: "Over 5,000+ member physical transformations tracked and verified.", icon: "Flame" }
+  ]
+};
+
 interface GymContextProps {
   requests: MembershipRequest[];
   members: Member[];
@@ -225,37 +306,59 @@ interface GymContextProps {
   gallery: GalleryPhoto[];
   contactResponses: ContactResponse[];
   settings: GymSettings;
+  trainers: Trainer[];
+  testimonials: Testimonial[];
+  hero: HeroSection;
+  about: AboutSection;
+  loading: boolean;
   
+  // Refresh manually
+  refreshData: () => Promise<void>;
+
   // Requests actions
-  addRequest: (request: Omit<MembershipRequest, 'id' | 'status' | 'createdAt'>) => void;
-  updateRequestStatus: (id: string, status: 'Approved' | 'Rejected') => void;
+  addRequest: (request: Omit<MembershipRequest, 'id' | 'status' | 'createdAt'>) => Promise<void>;
+  updateRequestStatus: (id: string, status: 'Approved' | 'Rejected') => Promise<void>;
   
   // Members actions
-  addMember: (member: Omit<Member, 'id'>) => void;
-  updateMember: (member: Member) => void;
-  deleteMember: (id: string) => void;
+  addMember: (member: Omit<Member, 'id'>) => Promise<void>;
+  updateMember: (member: Member) => Promise<void>;
+  deleteMember: (id: string) => Promise<void>;
   
   // Plans actions
-  addPlan: (plan: Omit<MembershipPlan, 'id'>) => void;
-  updatePlan: (plan: MembershipPlan) => void;
-  deletePlan: (id: string) => void;
+  addPlan: (plan: Omit<MembershipPlan, 'id'>) => Promise<void>;
+  updatePlan: (plan: MembershipPlan) => Promise<void>;
+  deletePlan: (id: string) => Promise<void>;
   
   // Announcements actions
-  addAnnouncement: (announcement: Omit<Announcement, 'id' | 'date'>) => void;
-  updateAnnouncement: (announcement: Announcement) => void;
-  deleteAnnouncement: (id: string) => void;
+  addAnnouncement: (announcement: Omit<Announcement, 'id' | 'date'>) => Promise<void>;
+  updateAnnouncement: (announcement: Announcement) => Promise<void>;
+  deleteAnnouncement: (id: string) => Promise<void>;
   
   // Gallery actions
-  addGalleryPhoto: (photo: Omit<GalleryPhoto, 'id'>) => void;
-  updateGalleryPhoto: (photo: GalleryPhoto) => void;
-  deleteGalleryPhoto: (id: string) => void;
+  addGalleryPhoto: (photo: Omit<GalleryPhoto, 'id'>) => Promise<void>;
+  updateGalleryPhoto: (photo: GalleryPhoto) => Promise<void>;
+  deleteGalleryPhoto: (id: string) => Promise<void>;
   
   // Contact Responses actions
-  addContactResponse: (response: Omit<ContactResponse, 'id' | 'createdAt'>) => void;
-  deleteContactResponse: (id: string) => void;
+  addContactResponse: (response: Omit<ContactResponse, 'id' | 'createdAt'>) => Promise<void>;
+  deleteContactResponse: (id: string) => Promise<void>;
   
   // Settings actions
-  updateSettings: (settings: GymSettings) => void;
+  updateSettings: (settings: GymSettings) => Promise<void>;
+
+  // Trainers actions
+  addTrainer: (trainer: Omit<Trainer, 'id'>) => Promise<void>;
+  updateTrainer: (trainer: Trainer) => Promise<void>;
+  deleteTrainer: (id: string) => Promise<void>;
+
+  // Testimonials actions
+  addTestimonial: (testimonial: Omit<Testimonial, 'id'>) => Promise<void>;
+  updateTestimonial: (testimonial: Testimonial) => Promise<void>;
+  deleteTestimonial: (id: string) => Promise<void>;
+
+  // Sections actions
+  updateHero: (hero: HeroSection) => Promise<void>;
+  updateAbout: (about: AboutSection) => Promise<void>;
 }
 
 const GymContext = createContext<GymContextProps | undefined>(undefined);
@@ -296,7 +399,29 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return data ? JSON.parse(data) : defaultSettings;
   });
 
-  // Sync to localStorage
+  const [trainers, setTrainers] = useState<Trainer[]>(() => {
+    const data = localStorage.getItem('ms_trainers');
+    return data ? JSON.parse(data) : defaultTrainers;
+  });
+
+  const [testimonials, setTestimonials] = useState<Testimonial[]>(() => {
+    const data = localStorage.getItem('ms_testimonials');
+    return data ? JSON.parse(data) : defaultTestimonials;
+  });
+
+  const [hero, setHero] = useState<HeroSection>(() => {
+    const data = localStorage.getItem('ms_hero');
+    return data ? JSON.parse(data) : defaultHero;
+  });
+
+  const [about, setAbout] = useState<AboutSection>(() => {
+    const data = localStorage.getItem('ms_about');
+    return data ? JSON.parse(data) : defaultAbout;
+  });
+
+  const [loading, setLoading] = useState(false);
+
+  // Sync to localStorage as local fallback
   useEffect(() => {
     localStorage.setItem('ms_requests', JSON.stringify(requests));
   }, [requests]);
@@ -325,8 +450,154 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.setItem('ms_settings', JSON.stringify(settings));
   }, [settings]);
 
+  useEffect(() => {
+    localStorage.setItem('ms_trainers', JSON.stringify(trainers));
+  }, [trainers]);
+
+  useEffect(() => {
+    localStorage.setItem('ms_testimonials', JSON.stringify(testimonials));
+  }, [testimonials]);
+
+  useEffect(() => {
+    localStorage.setItem('ms_hero', JSON.stringify(hero));
+  }, [hero]);
+
+  useEffect(() => {
+    localStorage.setItem('ms_about', JSON.stringify(about));
+  }, [about]);
+
+  // Fetch all tables from Supabase
+  const fetchData = async () => {
+    if (!isSupabaseConfigured || !supabase) return;
+    try {
+      setLoading(true);
+
+      const [
+        plansRes,
+        annRes,
+        galRes,
+        trainersRes,
+        testRes,
+        settingsRes,
+        heroRes,
+        aboutRes,
+        reqRes,
+        memRes,
+        contactRes
+      ] = await Promise.all([
+        supabase.from('membership_plans').select('*'),
+        supabase.from('announcements').select('*'),
+        supabase.from('gallery_photos').select('*'),
+        supabase.from('trainers').select('*'),
+        supabase.from('testimonials').select('*'),
+        supabase.from('gym_settings').select('*').eq('id', 'primary').maybeSingle(),
+        supabase.from('hero_section').select('*').eq('id', 'primary').maybeSingle(),
+        supabase.from('about_section').select('*').eq('id', 'primary').maybeSingle(),
+        supabase.from('membership_requests').select('*'),
+        supabase.from('members').select('*'),
+        supabase.from('contact_responses').select('*')
+      ]);
+
+      if (plansRes.data) setPlans(plansRes.data);
+      if (annRes.data) setAnnouncements(annRes.data);
+      if (galRes.data) setGallery(galRes.data);
+      if (trainersRes.data) setTrainers(trainersRes.data);
+      if (testRes.data) setTestimonials(testRes.data);
+      
+      if (settingsRes.data) {
+        setSettings(settingsRes.data);
+      }
+      
+      if (heroRes.data) {
+        setHero(heroRes.data);
+      }
+      
+      if (aboutRes.data) {
+        const featData = typeof aboutRes.data.features === 'string'
+          ? JSON.parse(aboutRes.data.features)
+          : aboutRes.data.features;
+        setAbout({ ...aboutRes.data, features: featData });
+      }
+
+      if (reqRes.data) setRequests(reqRes.data);
+      if (memRes.data) setMembers(memRes.data);
+      if (contactRes.data) setContactResponses(contactRes.data);
+
+    } catch (err) {
+      console.error('Failed to load from Supabase:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Check if tables are empty and seed them automatically if they are
+  const ensureSeeded = async () => {
+    if (!isSupabaseConfigured || !supabase) return;
+    try {
+      // Check if plans count is 0
+      const { data, error } = await supabase.from('membership_plans').select('id', { count: 'exact', head: true });
+      if (error) {
+        console.warn('Database tables not ready yet. Please run the provided SQL schema in your Supabase SQL editor.', error);
+        return;
+      }
+
+      const { count } = await supabase.from('membership_plans').select('*', { count: 'exact', head: true });
+      if (count === 0) {
+        console.log('Detected empty Supabase database. Seeding initial records...');
+
+        await Promise.all([
+          supabase.from('membership_plans').insert(defaultPlans),
+          supabase.from('announcements').insert(defaultAnnouncements),
+          supabase.from('gallery_photos').insert(defaultGallery),
+          supabase.from('trainers').insert(defaultTrainers),
+          supabase.from('testimonials').insert(defaultTestimonials),
+          supabase.from('gym_settings').upsert({ id: 'primary', ...defaultSettings }),
+          supabase.from('hero_section').upsert(defaultHero),
+          supabase.from('about_section').upsert({
+            ...defaultAbout,
+            features: defaultAbout.features
+          }),
+          supabase.from('membership_requests').insert(defaultRequests),
+          supabase.from('members').insert(defaultMembers),
+          supabase.from('contact_responses').insert(defaultContactResponses)
+        ]);
+
+        console.log('Successfully seeded Supabase!');
+        await fetchData();
+      }
+    } catch (err) {
+      console.error('Error during auto-seeding:', err);
+    }
+  };
+
+  // Synchronize on startup and subscribe to realtime updates
+  useEffect(() => {
+    const init = async () => {
+      await ensureSeeded();
+      await fetchData();
+    };
+    init();
+
+    if (isSupabaseConfigured && supabase) {
+      const channel = supabase.channel('gym-realtime-channel')
+        .on('postgres_changes', { event: '*', schema: 'public' }, (payload) => {
+          console.log('Realtime DB change detected. Synchronizing states...', payload);
+          fetchData();
+        })
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
+  }, []);
+
+  const refreshData = async () => {
+    await fetchData();
+  };
+
   // Request actions
-  const addRequest = (newReq: Omit<MembershipRequest, 'id' | 'status' | 'createdAt'>) => {
+  const addRequest = async (newReq: Omit<MembershipRequest, 'id' | 'status' | 'createdAt'>) => {
     const request: MembershipRequest = {
       ...newReq,
       id: `req-${Date.now()}`,
@@ -334,18 +605,28 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       createdAt: new Date().toISOString()
     };
     setRequests(prev => [request, ...prev]);
+
+    if (isSupabaseConfigured && supabase) {
+      const { error } = await supabase.from('membership_requests').insert([request]);
+      if (error) {
+        console.error('Failed to sync addRequest to Supabase:', error);
+        throw error;
+      }
+    }
   };
 
-  const updateRequestStatus = (id: string, status: 'Approved' | 'Rejected') => {
+  const updateRequestStatus = async (id: string, status: 'Approved' | 'Rejected') => {
+    let updatedReq: MembershipRequest | null = null;
+    let newMember: Member | null = null;
+
     setRequests(prev => prev.map(req => {
       if (req.id === id) {
-        const updated = { ...req, status };
+        updatedReq = { ...req, status };
         
-        // If approved, automatically add as active member in Gym members list
         if (status === 'Approved') {
           const alreadyExists = members.some(m => m.email.toLowerCase() === req.email.toLowerCase() || m.mobileNumber === req.mobileNumber);
           if (!alreadyExists) {
-            const newMember: Member = {
+            newMember = {
               id: `mem-${Date.now()}`,
               fullName: req.fullName,
               mobileNumber: req.mobileNumber,
@@ -356,104 +637,359 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               fitnessGoal: req.fitnessGoal,
               address: req.address,
               joinedDate: new Date().toISOString().split('T')[0],
-              paymentStatus: 'Unpaid', // Default to unpaid until admin receives payment
-              attendanceStatus: 'Present' // Default
+              paymentStatus: 'Unpaid',
+              attendanceStatus: 'Present'
             };
-            setMembers(mPrev => [newMember, ...mPrev]);
           }
         }
-        return updated;
+        return updatedReq;
       }
       return req;
     }));
+
+    if (newMember) {
+      setMembers(mPrev => [newMember!, ...mPrev]);
+    }
+
+    if (isSupabaseConfigured && supabase) {
+      const { error: reqError } = await supabase.from('membership_requests').update({ status }).eq('id', id);
+      if (reqError) {
+        console.error('Failed to sync updateRequestStatus to Supabase:', reqError);
+        throw reqError;
+      }
+      if (newMember) {
+        const { error: memError } = await supabase.from('members').insert([newMember]);
+        if (memError) {
+          console.error('Failed to insert new member to Supabase:', memError);
+          throw memError;
+        }
+      }
+    }
   };
 
   // Member actions
-  const addMember = (m: Omit<Member, 'id'>) => {
+  const addMember = async (m: Omit<Member, 'id'>) => {
     const member: Member = {
       ...m,
       id: `mem-${Date.now()}`
     };
     setMembers(prev => [member, ...prev]);
+
+    if (isSupabaseConfigured && supabase) {
+      const { error } = await supabase.from('members').insert([member]);
+      if (error) {
+        console.error('Failed to sync addMember to Supabase:', error);
+        throw error;
+      }
+    }
   };
 
-  const updateMember = (updatedMember: Member) => {
+  const updateMember = async (updatedMember: Member) => {
     setMembers(prev => prev.map(m => m.id === updatedMember.id ? updatedMember : m));
+
+    if (isSupabaseConfigured && supabase) {
+      const { error } = await supabase.from('members').update(updatedMember).eq('id', updatedMember.id);
+      if (error) {
+        console.error('Failed to sync updateMember to Supabase:', error);
+        throw error;
+      }
+    }
   };
 
-  const deleteMember = (id: string) => {
+  const deleteMember = async (id: string) => {
     setMembers(prev => prev.filter(m => m.id !== id));
+
+    if (isSupabaseConfigured && supabase) {
+      const { error } = await supabase.from('members').delete().eq('id', id);
+      if (error) {
+        console.error('Failed to sync deleteMember to Supabase:', error);
+        throw error;
+      }
+    }
   };
 
   // Plan actions
-  const addPlan = (p: Omit<MembershipPlan, 'id'>) => {
+  const addPlan = async (p: Omit<MembershipPlan, 'id'>) => {
     const plan: MembershipPlan = {
       ...p,
       id: `plan-${Date.now()}`
     };
     setPlans(prev => [...prev, plan]);
+
+    if (isSupabaseConfigured && supabase) {
+      const { error } = await supabase.from('membership_plans').insert([plan]);
+      if (error) {
+        console.error('Failed to sync addPlan to Supabase:', error);
+        throw error;
+      }
+    }
   };
 
-  const updatePlan = (updatedPlan: MembershipPlan) => {
+  const updatePlan = async (updatedPlan: MembershipPlan) => {
     setPlans(prev => prev.map(p => p.id === updatedPlan.id ? updatedPlan : p));
+
+    if (isSupabaseConfigured && supabase) {
+      const { error } = await supabase.from('membership_plans').update(updatedPlan).eq('id', updatedPlan.id);
+      if (error) {
+        console.error('Failed to sync updatePlan to Supabase:', error);
+        throw error;
+      }
+    }
   };
 
-  const deletePlan = (id: string) => {
+  const deletePlan = async (id: string) => {
     setPlans(prev => prev.filter(p => p.id !== id));
+
+    if (isSupabaseConfigured && supabase) {
+      const { error } = await supabase.from('membership_plans').delete().eq('id', id);
+      if (error) {
+        console.error('Failed to sync deletePlan to Supabase:', error);
+        throw error;
+      }
+    }
   };
 
   // Announcement actions
-  const addAnnouncement = (a: Omit<Announcement, 'id' | 'date'>) => {
+  const addAnnouncement = async (a: Omit<Announcement, 'id' | 'date'>) => {
     const announcement: Announcement = {
       ...a,
       id: `ann-${Date.now()}`,
       date: new Date().toISOString().split('T')[0]
     };
     setAnnouncements(prev => [announcement, ...prev]);
+
+    if (isSupabaseConfigured && supabase) {
+      const { error } = await supabase.from('announcements').insert([announcement]);
+      if (error) {
+        console.error('Failed to sync addAnnouncement to Supabase:', error);
+        throw error;
+      }
+    }
   };
 
-  const updateAnnouncement = (updatedAnn: Announcement) => {
+  const updateAnnouncement = async (updatedAnn: Announcement) => {
     setAnnouncements(prev => prev.map(a => a.id === updatedAnn.id ? updatedAnn : a));
+
+    if (isSupabaseConfigured && supabase) {
+      const { error } = await supabase.from('announcements').update(updatedAnn).eq('id', updatedAnn.id);
+      if (error) {
+        console.error('Failed to sync updateAnnouncement to Supabase:', error);
+        throw error;
+      }
+    }
   };
 
-  const deleteAnnouncement = (id: string) => {
+  const deleteAnnouncement = async (id: string) => {
     setAnnouncements(prev => prev.filter(a => a.id !== id));
+
+    if (isSupabaseConfigured && supabase) {
+      const { error } = await supabase.from('announcements').delete().eq('id', id);
+      if (error) {
+        console.error('Failed to sync deleteAnnouncement to Supabase:', error);
+        throw error;
+      }
+    }
   };
 
   // Gallery actions
-  const addGalleryPhoto = (photo: Omit<GalleryPhoto, 'id'>) => {
+  const addGalleryPhoto = async (photo: Omit<GalleryPhoto, 'id'>) => {
     const newPhoto: GalleryPhoto = {
       ...photo,
       id: `gal-${Date.now()}`
     };
     setGallery(prev => [...prev, newPhoto]);
+
+    if (isSupabaseConfigured && supabase) {
+      const { error } = await supabase.from('gallery_photos').insert([newPhoto]);
+      if (error) {
+        console.error('Failed to sync addGalleryPhoto to Supabase:', error);
+        throw error;
+      }
+    }
   };
 
-  const updateGalleryPhoto = (updatedPhoto: GalleryPhoto) => {
+  const updateGalleryPhoto = async (updatedPhoto: GalleryPhoto) => {
     setGallery(prev => prev.map(p => p.id === updatedPhoto.id ? updatedPhoto : p));
+
+    if (isSupabaseConfigured && supabase) {
+      const { error } = await supabase.from('gallery_photos').update(updatedPhoto).eq('id', updatedPhoto.id);
+      if (error) {
+        console.error('Failed to sync updateGalleryPhoto to Supabase:', error);
+        throw error;
+      }
+    }
   };
 
-  const deleteGalleryPhoto = (id: string) => {
+  const deleteGalleryPhoto = async (id: string) => {
     setGallery(prev => prev.filter(p => p.id !== id));
+
+    if (isSupabaseConfigured && supabase) {
+      const { error } = await supabase.from('gallery_photos').delete().eq('id', id);
+      if (error) {
+        console.error('Failed to sync deleteGalleryPhoto to Supabase:', error);
+        throw error;
+      }
+    }
   };
 
   // Contact actions
-  const addContactResponse = (res: Omit<ContactResponse, 'id' | 'createdAt'>) => {
+  const addContactResponse = async (res: Omit<ContactResponse, 'id' | 'createdAt'>) => {
     const newResponse: ContactResponse = {
       ...res,
       id: `res-${Date.now()}`,
       createdAt: new Date().toISOString()
     };
     setContactResponses(prev => [newResponse, ...prev]);
+
+    if (isSupabaseConfigured && supabase) {
+      const { error } = await supabase.from('contact_responses').insert([newResponse]);
+      if (error) {
+        console.error('Failed to sync addContactResponse to Supabase:', error);
+        throw error;
+      }
+    }
   };
 
-  const deleteContactResponse = (id: string) => {
+  const deleteContactResponse = async (id: string) => {
     setContactResponses(prev => prev.filter(r => r.id !== id));
+
+    if (isSupabaseConfigured && supabase) {
+      const { error } = await supabase.from('contact_responses').delete().eq('id', id);
+      if (error) {
+        console.error('Failed to sync deleteContactResponse to Supabase:', error);
+        throw error;
+      }
+    }
   };
 
   // Settings actions
-  const updateSettings = (updatedSettings: GymSettings) => {
+  const updateSettings = async (updatedSettings: GymSettings) => {
     setSettings(updatedSettings);
+
+    if (isSupabaseConfigured && supabase) {
+      const { error } = await supabase.from('gym_settings').upsert({
+        id: 'primary',
+        ...updatedSettings
+      });
+      if (error) {
+        console.error('Failed to sync updateSettings to Supabase:', error);
+        throw error;
+      }
+    }
+  };
+
+  // Trainers actions
+  const addTrainer = async (t: Omit<Trainer, 'id'>) => {
+    const trainer: Trainer = {
+      ...t,
+      id: `tr-${Date.now()}`
+    };
+    setTrainers(prev => [...prev, trainer]);
+
+    if (isSupabaseConfigured && supabase) {
+      const { error } = await supabase.from('trainers').insert([trainer]);
+      if (error) {
+        console.error('Failed to sync addTrainer to Supabase:', error);
+        throw error;
+      }
+    }
+  };
+
+  const updateTrainer = async (updatedTrainer: Trainer) => {
+    setTrainers(prev => prev.map(t => t.id === updatedTrainer.id ? updatedTrainer : t));
+
+    if (isSupabaseConfigured && supabase) {
+      const { error } = await supabase.from('trainers').update(updatedTrainer).eq('id', updatedTrainer.id);
+      if (error) {
+        console.error('Failed to sync updateTrainer to Supabase:', error);
+        throw error;
+      }
+    }
+  };
+
+  const deleteTrainer = async (id: string) => {
+    setTrainers(prev => prev.filter(t => t.id !== id));
+
+    if (isSupabaseConfigured && supabase) {
+      const { error } = await supabase.from('trainers').delete().eq('id', id);
+      if (error) {
+        console.error('Failed to sync deleteTrainer to Supabase:', error);
+        throw error;
+      }
+    }
+  };
+
+  // Testimonials actions
+  const addTestimonial = async (t: Omit<Testimonial, 'id'>) => {
+    const testimonial: Testimonial = {
+      ...t,
+      id: `test-${Date.now()}`
+    };
+    setTestimonials(prev => [...prev, testimonial]);
+
+    if (isSupabaseConfigured && supabase) {
+      const { error } = await supabase.from('testimonials').insert([testimonial]);
+      if (error) {
+        console.error('Failed to sync addTestimonial to Supabase:', error);
+        throw error;
+      }
+    }
+  };
+
+  const updateTestimonial = async (updatedTestimonial: Testimonial) => {
+    setTestimonials(prev => prev.map(t => t.id === updatedTestimonial.id ? updatedTestimonial : t));
+
+    if (isSupabaseConfigured && supabase) {
+      const { error } = await supabase.from('testimonials').update(updatedTestimonial).eq('id', updatedTestimonial.id);
+      if (error) {
+        console.error('Failed to sync updateTestimonial to Supabase:', error);
+        throw error;
+      }
+    }
+  };
+
+  const deleteTestimonial = async (id: string) => {
+    setTestimonials(prev => prev.filter(t => t.id !== id));
+
+    if (isSupabaseConfigured && supabase) {
+      const { error } = await supabase.from('testimonials').delete().eq('id', id);
+      if (error) {
+        console.error('Failed to sync deleteTestimonial to Supabase:', error);
+        throw error;
+      }
+    }
+  };
+
+  // Sections actions
+  const updateHero = async (updatedHero: HeroSection) => {
+    setHero(updatedHero);
+
+    if (isSupabaseConfigured && supabase) {
+      const { error } = await supabase.from('hero_section').upsert({
+        id: 'primary',
+        ...updatedHero
+      });
+      if (error) {
+        console.error('Failed to sync updateHero to Supabase:', error);
+        throw error;
+      }
+    }
+  };
+
+  const updateAbout = async (updatedAbout: AboutSection) => {
+    setAbout(updatedAbout);
+
+    if (isSupabaseConfigured && supabase) {
+      const { error } = await supabase.from('about_section').upsert({
+        id: 'primary',
+        ...updatedAbout,
+        features: updatedAbout.features
+      });
+      if (error) {
+        console.error('Failed to sync updateAbout to Supabase:', error);
+        throw error;
+      }
+    }
   };
 
   return (
@@ -465,6 +1001,12 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       gallery,
       contactResponses,
       settings,
+      trainers,
+      testimonials,
+      hero,
+      about,
+      loading,
+      refreshData,
       addRequest,
       updateRequestStatus,
       addMember,
@@ -481,7 +1023,15 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       deleteGalleryPhoto,
       addContactResponse,
       deleteContactResponse,
-      updateSettings
+      updateSettings,
+      addTrainer,
+      updateTrainer,
+      deleteTrainer,
+      addTestimonial,
+      updateTestimonial,
+      deleteTestimonial,
+      updateHero,
+      updateAbout
     }}>
       {children}
     </GymContext.Provider>
