@@ -16,6 +16,7 @@ import { UserPanel } from './components/UserPanel';
 import { AdminPanel } from './components/AdminPanel';
 
 function AppContent() {
+  const { loading } = useGym();
   const [view, setView] = useState<'public' | 'user' | 'admin'>('public');
   
   // Security / Session State
@@ -77,6 +78,23 @@ function AppContent() {
 
   return (
     <div className="bg-zinc-950 min-h-screen text-white font-sans selection:bg-red-600 selection:text-white">
+      {/* Luxury Brand Loading Overlay */}
+      {loading && (
+        <div className="fixed inset-0 bg-zinc-950 z-50 flex flex-col justify-center items-center animate-fade-in">
+          <div className="relative flex flex-col items-center">
+            {/* Spinning gold ring */}
+            <div className="w-16 h-16 border-2 border-brand/20 border-t-brand rounded-full animate-spin"></div>
+            {/* Pulsing Text logo */}
+            <span className="mt-6 text-xs font-black uppercase tracking-[0.4em] text-brand animate-pulse">
+              MS Fitness
+            </span>
+            <span className="mt-2 text-[9px] font-mono uppercase tracking-widest text-zinc-500">
+              Synchronizing Temple Database...
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* Sticky Top Navbar */}
       <Navbar 
         currentView={view}

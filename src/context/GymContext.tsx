@@ -285,47 +285,17 @@ const GymContext = createContext<GymContextProps | undefined>(undefined);
 export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [requests, setRequests] = useState<MembershipRequest[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
-  const [plans, setPlans] = useState<MembershipPlan[]>([]);
-  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-  const [gallery, setGallery] = useState<GalleryPhoto[]>([]);
+  const [plans, setPlans] = useState<MembershipPlan[]>(defaultPlans);
+  const [announcements, setAnnouncements] = useState<Announcement[]>(defaultAnnouncements);
+  const [gallery, setGallery] = useState<GalleryPhoto[]>(defaultGallery);
   const [contactResponses, setContactResponses] = useState<ContactResponse[]>([]);
-  const [settings, setSettings] = useState<GymSettings>({
-    phone: '',
-    email: '',
-    address: '',
-    whatsappNumber: '',
-    footerText: '',
-    facebookUrl: '',
-    instagramUrl: '',
-    workingHours: ''
-  });
-  const [trainers, setTrainers] = useState<Trainer[]>([]);
-  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
-  const [hero, setHero] = useState<HeroSection>({
-    id: 'primary',
-    title: '',
-    subtitle: '',
-    watermark: '',
-    image_url: '',
-    button_text_1: '',
-    button_text_2: '',
-    badge_text: '',
-    area_stat: '',
-    coaches_stat: '',
-    access_stat: ''
-  });
-  const [about, setAbout] = useState<AboutSection>({
-    id: 'primary',
-    title: '',
-    subtitle: '',
-    description_1: '',
-    description_2: '',
-    image_url: '',
-    quote: '',
-    features: []
-  });
+  const [settings, setSettings] = useState<GymSettings>(defaultSettings);
+  const [trainers, setTrainers] = useState<Trainer[]>(defaultTrainers);
+  const [testimonials, setTestimonials] = useState<Testimonial[]>(defaultTestimonials);
+  const [hero, setHero] = useState<HeroSection>(defaultHero);
+  const [about, setAbout] = useState<AboutSection>(defaultAbout);
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(isSupabaseConfigured);
 
   // Fetch all tables from Supabase
   const fetchData = async () => {
@@ -334,38 +304,52 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setLoading(true);
 
       // Safe fetch helper to fetch individual tables without breaking other tables
-      const fetchTable = async (tableName: string, query: any, setter: (val: any) => void) => {
+      const fetchTable = async (tableName: string, query: any, setter: (val: any) => void, fallback?: any) => {
         try {
           const { data, error } = await query;
           if (error) {
             console.warn(`Could not fetch ${tableName} from Supabase:`, error.message);
+            if (fallback !== undefined) setter(fallback);
           } else if (data !== null) {
-            setter(data);
+            if (Array.isArray(data)) {
+              if (data.length > 0) {
+                setter(data);
+              } else if (fallback !== undefined) {
+                setter(fallback);
+              }
+            } else {
+              setter(data);
+            }
+          } else if (fallback !== undefined) {
+            setter(fallback);
           }
         } catch (err) {
           console.warn(`Exception fetching ${tableName}:`, err);
+          if (fallback !== undefined) setter(fallback);
         }
       };
 
       await Promise.all([
-        fetchTable('membership_plans', supabase.from('membership_plans').select('*'), setPlans),
-        fetchTable('announcements', supabase.from('announcements').select('*'), setAnnouncements),
-        fetchTable('gallery_photos', supabase.from('gallery_photos').select('*'), setGallery),
-        fetchTable('trainers', supabase.from('trainers').select('*'), setTrainers),
-        fetchTable('testimonials', supabase.from('testimonials').select('*'), setTestimonials),
-        fetchTable('gym_settings', supabase.from('gym_settings').select('*').eq('id', 'primary').maybeSingle(), setSettings),
-        fetchTable('hero_section', supabase.from('hero_section').select('*').eq('id', 'primary').maybeSingle(), setHero),
+        fetchTable('membership_plans', supabase.from('membership_plans').select('*'), setPlans, defaultPlans),
+        fetchTable('announcements', supabase.from('announcements').select('*'), setAnnouncements, defaultAnnouncements),
+        fetchTable('gallery_photos', supabase.from('gallery_photos').select('*'), setGallery, defaultGallery),
+        fetchTable('trainers', supabase.from('trainers').select('*'), setTrainers, defaultTrainers),
+        fetchTable('testimonials', supabase.from('testimonials').select('*'), setTestimonials, defaultTestimonials),
+        fetchTable('gym_settings', supabase.from('gym_settings').select('*').eq('id', 'primary').maybeSingle(), setSettings, defaultSettings),
+        fetchTable('hero_section', supabase.from('hero_section').select('*').eq('id', 'primary').maybeSingle(), setHero, defaultHero),
         fetchTable('about_section', supabase.from('about_section').select('*').eq('id', 'primary').maybeSingle(), (data) => {
           if (data) {
             const featData = typeof data.features === 'string'
               ? JSON.parse(data.features)
               : data.features;
             setAbout({ ...data, features: featData });
+          } else {
+            setAbout(defaultAbout);
           }
-        }),
-        fetchTable('membership_requests', supabase.from('membership_requests').select('*'), setRequests),
-        fetchTable('members', supabase.from('members').select('*'), setMembers),
-        fetchTable('contact_messages', supabase.from('contact_messages').select('*'), setContactResponses)
+        }, defaultAbout),
+        fetchTable('membership_requests', supabase.from('membership_requests').select('*'), setRequests, []),
+        fetchTable('members', supabase.from('members').select('*'), setMembers, []),
+        fetchTable('contact_messages', supabase.from('contact_messages').select('*'), setContactResponses, [])
       ]);
 
     } catch (err) {
@@ -379,36 +363,95 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const ensureSeeded = async () => {
     if (!isSupabaseConfigured || !supabase) return;
     try {
-      // Check if plans count is 0
-      const { data, error } = await supabase.from('membership_plans').select('id', { count: 'exact', head: true });
-      if (error) {
-        console.warn('Database tables not ready yet. Please run the provided SQL schema in your Supabase SQL editor.', error);
-        return;
-      }
+      console.log('Verifying Supabase tables seeding state...');
 
-      const { count } = await supabase.from('membership_plans').select('*', { count: 'exact', head: true });
-      if (count === 0) {
-        console.log('Detected empty Supabase database. Seeding initial records...');
+      // Helper to check and seed a specific table
+      const checkAndSeed = async (
+        tableName: string,
+        checkQuery: any,
+        seedAction: () => any
+      ) => {
+        try {
+          const { data, error, count } = await checkQuery;
+          if (error) {
+            console.warn(`Error checking table ${tableName}:`, error.message);
+            return;
+          }
+          
+          // Determine if table is empty or missing its key row
+          const isEmpty = (data === null) || (Array.isArray(data) && data.length === 0) || (count === 0);
+          
+          if (isEmpty) {
+            console.log(`Table "${tableName}" is empty or has missing records. Seeding default data...`);
+            const { error: seedError } = await seedAction();
+            if (seedError) {
+              console.error(`Error seeding table "${tableName}":`, seedError.message);
+            } else {
+              console.log(`Successfully seeded table "${tableName}"!`);
+            }
+          }
+        } catch (err) {
+          console.error(`Exception during checking/seeding "${tableName}":`, err);
+        }
+      };
 
-        await Promise.all([
-          supabase.from('membership_plans').insert(defaultPlans),
-          supabase.from('announcements').insert(defaultAnnouncements),
-          supabase.from('gallery_photos').insert(defaultGallery),
-          supabase.from('trainers').insert(defaultTrainers),
-          supabase.from('testimonials').insert(defaultTestimonials),
-          supabase.from('gym_settings').upsert({ id: 'primary', ...defaultSettings }),
-          supabase.from('hero_section').upsert(defaultHero),
-          supabase.from('about_section').upsert({
+      await Promise.all([
+        // 1. membership_plans
+        checkAndSeed(
+          'membership_plans',
+          supabase.from('membership_plans').select('*', { count: 'exact', head: false }),
+          () => supabase.from('membership_plans').insert(defaultPlans)
+        ),
+        // 2. announcements
+        checkAndSeed(
+          'announcements',
+          supabase.from('announcements').select('*', { count: 'exact', head: false }),
+          () => supabase.from('announcements').insert(defaultAnnouncements)
+        ),
+        // 3. gallery_photos
+        checkAndSeed(
+          'gallery_photos',
+          supabase.from('gallery_photos').select('*', { count: 'exact', head: false }),
+          () => supabase.from('gallery_photos').insert(defaultGallery)
+        ),
+        // 4. trainers
+        checkAndSeed(
+          'trainers',
+          supabase.from('trainers').select('*', { count: 'exact', head: false }),
+          () => supabase.from('trainers').insert(defaultTrainers)
+        ),
+        // 5. testimonials
+        checkAndSeed(
+          'testimonials',
+          supabase.from('testimonials').select('*', { count: 'exact', head: false }),
+          () => supabase.from('testimonials').insert(defaultTestimonials)
+        ),
+        // 6. gym_settings
+        checkAndSeed(
+          'gym_settings',
+          supabase.from('gym_settings').select('*').eq('id', 'primary').maybeSingle(),
+          () => supabase.from('gym_settings').upsert({ id: 'primary', ...defaultSettings })
+        ),
+        // 7. hero_section
+        checkAndSeed(
+          'hero_section',
+          supabase.from('hero_section').select('*').eq('id', 'primary').maybeSingle(),
+          () => supabase.from('hero_section').upsert(defaultHero)
+        ),
+        // 8. about_section
+        checkAndSeed(
+          'about_section',
+          supabase.from('about_section').select('*').eq('id', 'primary').maybeSingle(),
+          () => supabase.from('about_section').upsert({
             ...defaultAbout,
             features: defaultAbout.features
           })
-        ]);
+        )
+      ]);
 
-        console.log('Successfully seeded Supabase!');
-        await fetchData();
-      }
+      console.log('All tables seeding check finished successfully!');
     } catch (err) {
-      console.error('Error during auto-seeding:', err);
+      console.error('Error in ensureSeeded routine:', err);
     }
   };
 
