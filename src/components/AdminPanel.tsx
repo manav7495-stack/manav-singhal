@@ -351,24 +351,39 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   };
 
   // Handle Hero Submit
-  const handleHeroSubmit = (e: React.FormEvent) => {
+  const handleHeroSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    updateHero(heroForm);
-    alert('Hero Section successfully updated & synchronized!');
+    try {
+      await updateHero(heroForm);
+      alert('Hero Section successfully updated & synchronized!');
+    } catch (err: any) {
+      console.error(err);
+      alert('Failed to save Hero Section to database: ' + (err.message || err));
+    }
   };
 
   // Handle About Submit
-  const handleAboutSubmit = (e: React.FormEvent) => {
+  const handleAboutSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    updateAbout(aboutForm);
-    alert('About Section successfully updated & synchronized!');
+    try {
+      await updateAbout(aboutForm);
+      alert('About Section successfully updated & synchronized!');
+    } catch (err: any) {
+      console.error(err);
+      alert('Failed to save About Section to database: ' + (err.message || err));
+    }
   };
 
   // Handle Settings Submit
-  const handleSettingsSubmit = (e: React.FormEvent) => {
+  const handleSettingsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    updateSettings(settingsForm);
-    alert('Gym Settings successfully updated!');
+    try {
+      await updateSettings(settingsForm);
+      alert('Gym Settings successfully updated & synchronized!');
+    } catch (err: any) {
+      console.error(err);
+      alert('Failed to save Gym Settings to database: ' + (err.message || err));
+    }
   };
 
   return (
