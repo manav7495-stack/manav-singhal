@@ -285,15 +285,45 @@ const GymContext = createContext<GymContextProps | undefined>(undefined);
 export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [requests, setRequests] = useState<MembershipRequest[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
-  const [plans, setPlans] = useState<MembershipPlan[]>(defaultPlans);
-  const [announcements, setAnnouncements] = useState<Announcement[]>(defaultAnnouncements);
-  const [gallery, setGallery] = useState<GalleryPhoto[]>(defaultGallery);
+  const [plans, setPlans] = useState<MembershipPlan[]>([]);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [gallery, setGallery] = useState<GalleryPhoto[]>([]);
   const [contactResponses, setContactResponses] = useState<ContactResponse[]>([]);
-  const [settings, setSettings] = useState<GymSettings>(defaultSettings);
-  const [trainers, setTrainers] = useState<Trainer[]>(defaultTrainers);
-  const [testimonials, setTestimonials] = useState<Testimonial[]>(defaultTestimonials);
-  const [hero, setHero] = useState<HeroSection>(defaultHero);
-  const [about, setAbout] = useState<AboutSection>(defaultAbout);
+  const [settings, setSettings] = useState<GymSettings>({
+    phone: '',
+    email: '',
+    address: '',
+    whatsappNumber: '',
+    footerText: '',
+    facebookUrl: '',
+    instagramUrl: '',
+    workingHours: ''
+  });
+  const [trainers, setTrainers] = useState<Trainer[]>([]);
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
+  const [hero, setHero] = useState<HeroSection>({
+    id: 'primary',
+    title: '',
+    subtitle: '',
+    watermark: '',
+    image_url: '',
+    button_text_1: '',
+    button_text_2: '',
+    badge_text: '',
+    area_stat: '',
+    coaches_stat: '',
+    access_stat: ''
+  });
+  const [about, setAbout] = useState<AboutSection>({
+    id: 'primary',
+    title: '',
+    subtitle: '',
+    description_1: '',
+    description_2: '',
+    image_url: '',
+    quote: '',
+    features: []
+  });
 
   const [loading, setLoading] = useState(false);
 
@@ -335,7 +365,7 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }),
         fetchTable('membership_requests', supabase.from('membership_requests').select('*'), setRequests),
         fetchTable('members', supabase.from('members').select('*'), setMembers),
-        fetchTable('contact_responses', supabase.from('contact_responses').select('*'), setContactResponses)
+        fetchTable('contact_messages', supabase.from('contact_messages').select('*'), setContactResponses)
       ]);
 
     } catch (err) {
@@ -721,7 +751,7 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     if (isSupabaseConfigured && supabase) {
       try {
-        const { error } = await supabase.from('contact_responses').insert([newResponse]);
+        const { error } = await supabase.from('contact_messages').insert([newResponse]);
         if (error) throw error;
         await fetchData();
       } catch (err: any) {
@@ -737,7 +767,7 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     if (isSupabaseConfigured && supabase) {
       try {
-        const { error } = await supabase.from('contact_responses').delete().eq('id', id);
+        const { error } = await supabase.from('contact_messages').delete().eq('id', id);
         if (error) throw error;
         await fetchData();
         alert('Contact Message successfully deleted!');

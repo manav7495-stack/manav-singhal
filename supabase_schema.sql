@@ -123,8 +123,8 @@ CREATE TABLE IF NOT EXISTS members (
   "attendanceStatus" TEXT NOT NULL
 );
 
--- 11. Contact Responses Table
-CREATE TABLE IF NOT EXISTS contact_responses (
+-- 11. Contact Messages Table
+CREATE TABLE IF NOT EXISTS contact_messages (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
   phone TEXT NOT NULL,
@@ -193,3 +193,63 @@ INSERT INTO about_section (id, title, subtitle, description_1, description_2, im
   {"title": "Proven Success Loops", "desc": "Over 5,000+ member physical transformations tracked and verified.", "icon": "Flame"}
 ]')
 ON CONFLICT (id) DO NOTHING;
+
+-- =========================================================
+-- ROW LEVEL SECURITY (RLS) POLICIES
+-- =========================================================
+
+-- Enable Row Level Security (RLS) on all tables
+ALTER TABLE gym_settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE hero_section ENABLE ROW LEVEL SECURITY;
+ALTER TABLE about_section ENABLE ROW LEVEL SECURITY;
+ALTER TABLE membership_plans ENABLE ROW LEVEL SECURITY;
+ALTER TABLE announcements ENABLE ROW LEVEL SECURITY;
+ALTER TABLE gallery_photos ENABLE ROW LEVEL SECURITY;
+ALTER TABLE trainers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE testimonials ENABLE ROW LEVEL SECURITY;
+ALTER TABLE membership_requests ENABLE ROW LEVEL SECURITY;
+ALTER TABLE members ENABLE ROW LEVEL SECURITY;
+ALTER TABLE contact_messages ENABLE ROW LEVEL SECURITY;
+
+-- 1. Policies for gym_settings
+CREATE POLICY "Public read gym_settings" ON gym_settings FOR SELECT TO public USING (true);
+CREATE POLICY "Admin write gym_settings" ON gym_settings FOR ALL TO public USING (true) WITH CHECK (true);
+
+-- 2. Policies for hero_section
+CREATE POLICY "Public read hero_section" ON hero_section FOR SELECT TO public USING (true);
+CREATE POLICY "Admin write hero_section" ON hero_section FOR ALL TO public USING (true) WITH CHECK (true);
+
+-- 3. Policies for about_section
+CREATE POLICY "Public read about_section" ON about_section FOR SELECT TO public USING (true);
+CREATE POLICY "Admin write about_section" ON about_section FOR ALL TO public USING (true) WITH CHECK (true);
+
+-- 4. Policies for membership_plans
+CREATE POLICY "Public read membership_plans" ON membership_plans FOR SELECT TO public USING (true);
+CREATE POLICY "Admin write membership_plans" ON membership_plans FOR ALL TO public USING (true) WITH CHECK (true);
+
+-- 5. Policies for announcements
+CREATE POLICY "Public read announcements" ON announcements FOR SELECT TO public USING (true);
+CREATE POLICY "Admin write announcements" ON announcements FOR ALL TO public USING (true) WITH CHECK (true);
+
+-- 6. Policies for gallery_photos
+CREATE POLICY "Public read gallery_photos" ON gallery_photos FOR SELECT TO public USING (true);
+CREATE POLICY "Admin write gallery_photos" ON gallery_photos FOR ALL TO public USING (true) WITH CHECK (true);
+
+-- 7. Policies for trainers
+CREATE POLICY "Public read trainers" ON trainers FOR SELECT TO public USING (true);
+CREATE POLICY "Admin write trainers" ON trainers FOR ALL TO public USING (true) WITH CHECK (true);
+
+-- 8. Policies for testimonials
+CREATE POLICY "Public read testimonials" ON testimonials FOR SELECT TO public USING (true);
+CREATE POLICY "Admin write testimonials" ON testimonials FOR ALL TO public USING (true) WITH CHECK (true);
+
+-- 9. Policies for membership_requests
+CREATE POLICY "Public insert membership_requests" ON membership_requests FOR INSERT TO public WITH CHECK (true);
+CREATE POLICY "Admin read/write membership_requests" ON membership_requests FOR ALL TO public USING (true) WITH CHECK (true);
+
+-- 10. Policies for members
+CREATE POLICY "Admin read/write members" ON members FOR ALL TO public USING (true) WITH CHECK (true);
+
+-- 11. Policies for contact_messages
+CREATE POLICY "Public insert contact_messages" ON contact_messages FOR INSERT TO public WITH CHECK (true);
+CREATE POLICY "Admin read/write contact_messages" ON contact_messages FOR ALL TO public USING (true) WITH CHECK (true);
