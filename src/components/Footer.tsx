@@ -26,14 +26,14 @@ export const Footer: React.FC = () => {
               className="flex items-center cursor-pointer group"
             >
               <img 
-                src="/manavdesignlab-logo.png" 
-                alt="ManavDesignLab Logo" 
+                src="/ms-fitness-logo.png" 
+                alt="MS Fitness Logo" 
                 className="h-[42px] md:h-[55px] w-auto object-contain transition-transform duration-200 group-hover:scale-105"
                 referrerPolicy="no-referrer"
               />
             </div>
             <p className="text-zinc-500 text-xs sm:text-sm leading-relaxed">
-              Manav Design Lab (MDL) is your premium strength and design sanctuary, forging elite physical and aesthetic performance.
+              MS Fitness is our premium strength and conditioning sanctuary, forging elite physical performance and lifestyle excellence.
             </p>
             {/* Social links */}
             <div className="flex items-center space-x-3 pt-2">

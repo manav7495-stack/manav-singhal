@@ -51,16 +51,16 @@ export const openWhatsAppCTA = (type: 'Join Now' | 'Book Visit' | 'Contact Us' |
 
   switch (type) {
     case 'Join Now':
-      message = 'Hi ManavDesignLab! I am ready to join ManavDesignLab and begin my premium coaching journey. Please guide me with the enrollment.';
+      message = 'Hi MS Fitness! I am ready to join MS Fitness and begin my premium coaching journey. Please guide me with the enrollment.';
       break;
     case 'Book Visit':
-      message = 'Hi ManavDesignLab! I would love to book a free walkthrough tour and trial gym visit at your club. Please let me know the available timings.';
+      message = 'Hi MS Fitness! I would love to book a free walkthrough tour and trial gym visit at your club. Please let me know the available timings.';
       break;
     case 'Contact Us':
-      message = 'Hi ManavDesignLab! I am interested in your facilities and would like to talk with a club manager. Please get back to me.';
+      message = 'Hi MS Fitness! I am interested in your facilities and would like to talk with a club manager. Please get back to me.';
       break;
     case 'Chatbot':
-      message = 'Hi ManavDesignLab! I am chatting with your MDL Assistant and would like to speak directly with an elite trainer.';
+      message = 'Hi MS Fitness! I am chatting with your MS Fitness Assistant and would like to speak directly with an elite trainer.';
       break;
   }
 
