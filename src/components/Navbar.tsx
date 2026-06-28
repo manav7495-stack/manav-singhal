@@ -37,7 +37,7 @@ export const Navbar: React.FC<NavbarProps> = () => {
             className="flex items-center cursor-pointer group select-none"
           >
             <img 
-              src="/ms-fitness-logo.png" 
+              src="/logo.png" 
               alt="MS Fitness Logo" 
               className="h-[42px] md:h-[55px] w-auto object-contain transition-transform duration-200 group-hover:scale-105"
               referrerPolicy="no-referrer"
