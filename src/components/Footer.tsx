@@ -1,7 +1,6 @@
 import React from 'react';
 import { Dumbbell, Lock, ChevronRight, Facebook, Instagram, Shield } from 'lucide-react';
 import { useGym } from '../context/GymContext';
-import brandLogo from '../assets/images/manavdesignlab-logo.png';
 
 export const Footer: React.FC = () => {
   const { settings } = useGym();
@@ -27,7 +26,7 @@ export const Footer: React.FC = () => {
               className="flex items-center cursor-pointer group"
             >
               <img 
-                src={brandLogo} 
+                src="/manavdesignlab-logo.png" 
                 alt="ManavDesignLab Logo" 
                 className="h-[42px] md:h-[55px] w-auto object-contain transition-transform duration-200 group-hover:scale-105"
                 referrerPolicy="no-referrer"
