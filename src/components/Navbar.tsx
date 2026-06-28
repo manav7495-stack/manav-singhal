@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import { openWhatsAppCTA } from '../utils/whatsapp';
+import logo from '../assets/images/ms-fitness-logo.png';
 
 interface NavbarProps {
   currentView?: string;
@@ -16,7 +17,6 @@ interface NavbarProps {
 
 export const Navbar: React.FC<NavbarProps> = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [logoError, setLogoError] = useState(false);
 
   const handleNavClick = (sectionId: string) => {
     setIsOpen(false);
@@ -37,19 +37,12 @@ export const Navbar: React.FC<NavbarProps> = () => {
             onClick={() => handleNavClick('home')} 
             className="flex items-center cursor-pointer group select-none"
           >
-            {!logoError ? (
-              <img 
-                src="/logo.png" 
-                alt="MS Fitness Logo" 
-                onError={() => setLogoError(true)}
-                className="h-[42px] md:h-[55px] w-auto object-contain transition-transform duration-200 group-hover:scale-105"
-                referrerPolicy="no-referrer"
-              />
-            ) : (
-              <span className="font-sans font-black text-xl md:text-2xl tracking-[0.2em] italic text-brand transition-all duration-200 group-hover:scale-105">
-                MS <span className="text-white">FITNESS</span>
-              </span>
-            )}
+            <img 
+              src={logo} 
+              alt="MS Fitness Logo" 
+              className="h-12 w-auto object-contain transition-transform duration-200 group-hover:scale-105"
+              referrerPolicy="no-referrer"
+            />
           </div>
 
           {/* Desktop Navigation Links */}
