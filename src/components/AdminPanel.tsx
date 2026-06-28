@@ -3,10 +3,11 @@ import {
   Lock, LayoutDashboard, UserCheck, Users, Dumbbell, 
   Image, Megaphone, MessageSquare, Settings, LogOut, 
   CheckCircle, XCircle, Plus, Trash2, Edit2, ShieldAlert,
-  Save, Eye, Calendar, Mail, Phone, Info, Award, Star, Flame
+  Save, Eye, Calendar, Mail, Phone, Info, Award, Star, Flame,
+  Globe, RefreshCw, FileSpreadsheet, Terminal
 } from 'lucide-react';
 import { useGym } from '../context/GymContext';
-import { Member, MembershipPlan, Announcement, GalleryPhoto, GymSettings, RequestStatus, PaymentStatus, AttendanceStatus, Gender, AnnouncementType, Trainer, Testimonial, HeroSection, AboutSection } from '../types';
+import { Member, MembershipPlan, Announcement, GalleryPhoto, GymSettings, RequestStatus, PaymentStatus, AttendanceStatus, Gender, AnnouncementType, Trainer, Testimonial, HeroSection, AboutSection, CRMIntegrationConfig, CRMSyncLog } from '../types';
 
 interface AdminPanelProps {
   onLoginSuccess: () => void;
@@ -14,7 +15,7 @@ interface AdminPanelProps {
   isAdminLoggedIn: boolean;
 }
 
-type AdminTab = 'dashboard' | 'requests' | 'members' | 'plans' | 'gallery' | 'announcements' | 'responses' | 'settings' | 'hero' | 'about' | 'testimonials' | 'trainers';
+type AdminTab = 'dashboard' | 'requests' | 'members' | 'plans' | 'gallery' | 'announcements' | 'responses' | 'settings' | 'hero' | 'about' | 'testimonials' | 'trainers' | 'crm';
 
 export const AdminPanel: React.FC<AdminPanelProps> = ({ 
   onLoginSuccess, 
@@ -22,7 +23,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   isAdminLoggedIn 
 }) => {
   const { 
-    requests, updateRequestStatus,
+    requests, updateRequestStatus, addRequest,
     members, addMember, updateMember, deleteMember,
     plans, addPlan, updatePlan, deletePlan,
     announcements, addAnnouncement, updateAnnouncement, deleteAnnouncement,
@@ -32,7 +33,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     trainers, addTrainer, updateTrainer, deleteTrainer,
     testimonials, addTestimonial, updateTestimonial, deleteTestimonial,
     hero, updateHero,
-    about, updateAbout
+    about, updateAbout,
+    crmConfig, crmLogs, updateCRMConfig, clearCRMLogs
   } = useGym();
 
   // Login Form State
@@ -89,9 +91,17 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   // About Section Form
   const [aboutForm, setAboutForm] = useState<AboutSection>({ ...about });
 
+  // CRM Form States
+  const [crmForm, setCrmForm] = useState<CRMIntegrationConfig>({ ...crmConfig });
+  const [googleSheetFormEnabled, setGoogleSheetFormEnabled] = useState(settings?.googleSheetEnabled || false);
+  const [googleSheetFormUrl, setGoogleSheetFormUrl] = useState(settings?.googleSheetUrl || '');
+  const [testingConnection, setTestingConnection] = useState(false);
+
   // Synchronize form states when database context updates
   useEffect(() => {
     setSettingsForm({ ...settings });
+    setGoogleSheetFormEnabled(settings?.googleSheetEnabled || false);
+    setGoogleSheetFormUrl(settings?.googleSheetUrl || '');
   }, [settings]);
 
   useEffect(() => {
@@ -101,6 +111,50 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   useEffect(() => {
     setAboutForm({ ...about });
   }, [about]);
+
+  useEffect(() => {
+    setCrmForm({ ...crmConfig });
+  }, [crmConfig]);
+
+  const handleCrmSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      // Save general CRM Config
+      await updateCRMConfig(crmForm);
+      // Save Google Sheets integration settings in GymSettings
+      await updateSettings({
+        ...settings,
+        googleSheetEnabled: googleSheetFormEnabled,
+        googleSheetUrl: googleSheetFormUrl
+      });
+      alert('🎉 CRM and Google Sheets configurations updated successfully!');
+    } catch (err: any) {
+      alert('Failed to update configurations: ' + (err.message || err));
+    }
+  };
+
+  const handleTestCRMConnection = async () => {
+    setTestingConnection(true);
+    try {
+      const testLead = {
+        fullName: 'John Doe (Test Lead)',
+        mobileNumber: '+91 99999 99999',
+        email: 'test.lead@manav.sbs',
+        age: 28,
+        gender: 'Male' as const,
+        selectedPlanId: 'plan-basic',
+        fitnessGoal: 'Testing CRM Webhook Integration',
+        address: 'Test Env Sandbox',
+        message: 'This is an automatic test lead to verify webhook and spreadsheet sync channels.'
+      };
+      await addRequest(testLead);
+      alert('🎉 Sample Lead generated! Check your spreadsheet, CRM, or CRM Sync logs below to verify delivery.');
+    } catch (err: any) {
+      alert('Failed to send test lead: ' + (err.message || err));
+    } finally {
+      setTestingConnection(false);
+    }
+  };
 
   // Handle Admin Login
   const handleAdminLogin = (e: React.FormEvent) => {
@@ -548,6 +602,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 </button>
 
                 <button
+                  onClick={() => setActiveTab('crm')}
+                  className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${activeTab === 'crm' ? 'bg-red-600 text-white font-bold' : 'text-zinc-400 hover:text-white hover:bg-zinc-950'}`}
+                >
+                  <Globe size={18} />
+                  <span>CRM & Sheets Sync</span>
+                </button>
+
+                <button
                   onClick={() => setActiveTab('hero')}
                   className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${activeTab === 'hero' ? 'bg-red-600 text-white font-bold' : 'text-zinc-400 hover:text-white hover:bg-zinc-950'}`}
                 >
@@ -730,7 +792,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                             <p className="text-zinc-500 text-xs truncate max-w-[150px]">{req.email}</p>
                           </td>
                           <td className="p-4 font-bold text-red-500">
-                            {plans.find(p => p.id === req.selectedPlanId)?.name || 'Unknown Plan'}
+                            {req.selectedPlanId === 'free-visit' ? 'Free Gym Visit' : (plans.find(p => p.id === req.selectedPlanId)?.name || 'Unknown Plan')}
                           </td>
                           <td className="p-4 max-w-[200px] sm:max-w-xs">
                             <p className="text-zinc-300 truncate"><span className="text-zinc-500 font-bold">Goal:</span> {req.fitnessGoal}</p>
@@ -1178,6 +1240,67 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     ></textarea>
                   </div>
 
+                  {/* Google Sheets Integration section */}
+                  <div className="border-t border-zinc-850 pt-6 space-y-4">
+                    <div className="flex items-center space-x-3 bg-zinc-950/50 p-4 rounded-xl border border-zinc-850">
+                      <input 
+                        type="checkbox"
+                        id="googleSheetEnabled"
+                        checked={settingsForm.googleSheetEnabled || false}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, googleSheetEnabled: e.target.checked })}
+                        className="w-4 h-4 rounded text-red-600 focus:ring-red-500 border-zinc-800 bg-zinc-900"
+                      />
+                      <label htmlFor="googleSheetEnabled" className="block text-xs font-black uppercase tracking-wider text-white cursor-pointer selection:bg-transparent">
+                        Enable Google Sheets Sync (Optional)
+                      </label>
+                    </div>
+
+                    {(settingsForm.googleSheetEnabled) && (
+                      <div className="space-y-4 animate-fade-in">
+                        <div>
+                          <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">Google Sheets Webhook / Apps Script Web App URL</label>
+                          <input 
+                            type="url"
+                            value={settingsForm.googleSheetUrl || ''}
+                            onChange={(e) => setSettingsForm({ ...settingsForm, googleSheetUrl: e.target.value })}
+                            placeholder="https://script.google.com/macros/s/.../exec"
+                            className="w-full px-4 py-3 bg-zinc-950 border border-zinc-800 rounded-xl text-white text-sm focus:outline-none focus:border-red-500 transition-colors font-mono text-xs"
+                          />
+                        </div>
+
+                        <div className="p-4 bg-zinc-950 rounded-xl border border-zinc-850/50 text-xs text-zinc-400 space-y-2">
+                          <p className="font-bold text-white uppercase text-[10px] tracking-wider text-red-500">How to Setup Google Sheets Integration:</p>
+                          <ol className="list-decimal pl-4 space-y-1 text-[11px] leading-relaxed">
+                            <li>Create a new Google Sheet & name columns in row 1: <code className="text-red-400 bg-zinc-900 px-1 py-0.5 rounded font-mono">timestamp, id, fullName, mobileNumber, email, age, gender, plan, fitnessGoal, message, source</code>.</li>
+                            <li>In Extensions &gt; Apps Script, replace everything with:
+                              <pre className="mt-2 p-2.5 bg-zinc-900 text-zinc-300 rounded font-mono text-[9px] overflow-x-auto select-all leading-normal max-h-32">
+{`function doPost(e) {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  var data = JSON.parse(e.postData.contents);
+  sheet.appendRow([
+    data.timestamp,
+    data.id,
+    data.fullName,
+    data.mobileNumber,
+    data.email,
+    data.age,
+    data.gender,
+    data.plan,
+    data.fitnessGoal,
+    data.message,
+    data.source
+  ]);
+  return ContentService.createTextOutput("success");
+}`}
+                              </pre>
+                            </li>
+                            <li>Click <span className="font-bold text-white">Deploy</span> &gt; <span className="font-bold text-white">New Deployment</span>, select type <span className="font-bold text-white">Web App</span>, set Access to <span className="font-bold text-white">"Anyone"</span>, authorize it, and paste the URL here!</li>
+                          </ol>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
                   <div>
                     <button
                       type="submit"
@@ -1187,6 +1310,346 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     </button>
                   </div>
                 </form>
+              </div>
+            )}
+
+            {/* TAB: CRM & SHEET SYNC INTEGRATIONS */}
+            {activeTab === 'crm' && (
+              <div className="space-y-8 max-w-5xl">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div>
+                    <h1 className="font-sans font-black text-2xl sm:text-4xl uppercase text-white flex items-center gap-2">
+                      <Globe className="text-red-500 animate-pulse" size={28} />
+                      CRM & Sheets Sync
+                    </h1>
+                    <p className="text-zinc-400 text-xs sm:text-sm mt-1">Configure live API synchronization to push leads to spreadsheet or sales pipelines instantly.</p>
+                  </div>
+
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={handleTestCRMConnection}
+                      disabled={testingConnection}
+                      className="px-4 py-2.5 bg-zinc-900 hover:bg-zinc-800 text-red-500 font-bold uppercase tracking-wider text-[11px] rounded-lg border border-red-500/20 transition-all flex items-center gap-1.5 disabled:opacity-50"
+                    >
+                      <RefreshCw size={13} className={testingConnection ? 'animate-spin' : ''} />
+                      {testingConnection ? 'Testing...' : 'Send Test Lead'}
+                    </button>
+                  </div>
+                </div>
+
+                <form onSubmit={handleCrmSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* Left columns - settings */}
+                  <div className="lg:col-span-2 space-y-6">
+                    
+                    {/* Google Sheets Card */}
+                    <div className="p-6 bg-zinc-900 border border-zinc-850 rounded-2xl space-y-4">
+                      <div className="flex items-center justify-between border-b border-zinc-850 pb-3">
+                        <div className="flex items-center space-x-3">
+                          <div className="p-2 bg-green-500/10 text-green-500 rounded-lg">
+                            <FileSpreadsheet size={20} />
+                          </div>
+                          <div>
+                            <h3 className="font-sans font-black text-xs uppercase tracking-wider text-white">Google Sheets Integration</h3>
+                            <p className="text-[10px] text-zinc-500 font-bold">Write lead rows directly to spreadsheet</p>
+                          </div>
+                        </div>
+                        <label className="relative inline-flex items-center cursor-pointer select-none">
+                          <input 
+                            type="checkbox" 
+                            checked={googleSheetFormEnabled}
+                            onChange={(e) => setGoogleSheetFormEnabled(e.target.checked)}
+                            className="sr-only peer"
+                          />
+                          <div className="w-11 h-6 bg-zinc-800 rounded-full peer peer-focus:ring-1 peer-focus:ring-red-500 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-zinc-400 after:border-zinc-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600 peer-checked:after:bg-white"></div>
+                        </label>
+                      </div>
+
+                      {googleSheetFormEnabled && (
+                        <div className="space-y-4 pt-1 animate-fade-in">
+                          <div>
+                            <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-400 mb-1">Apps Script Web App Endpoint URL</label>
+                            <input 
+                              type="url"
+                              value={googleSheetFormUrl}
+                              onChange={(e) => setGoogleSheetFormUrl(e.target.value)}
+                              placeholder="https://script.google.com/macros/s/.../exec"
+                              className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-lg text-white text-xs focus:outline-none focus:border-red-500 transition-colors font-mono"
+                              required={googleSheetFormEnabled}
+                            />
+                          </div>
+                          <div className="p-3 bg-zinc-950 rounded-lg text-[10px] text-zinc-500 leading-relaxed border border-zinc-850">
+                            💡 Name columns in Row 1 of your sheet: <code className="text-green-400 font-mono">timestamp, id, fullName, mobileNumber, email, age, gender, plan, fitnessGoal, message, source</code>.
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Webhook Card */}
+                    <div className="p-6 bg-zinc-900 border border-zinc-850 rounded-2xl space-y-4">
+                      <div className="flex items-center justify-between border-b border-zinc-850 pb-3">
+                        <div className="flex items-center space-x-3">
+                          <div className="p-2 bg-red-500/10 text-red-500 rounded-lg">
+                            <Globe size={20} />
+                          </div>
+                          <div>
+                            <h3 className="font-sans font-black text-xs uppercase tracking-wider text-white">Zapier & Webhook CRM Integration</h3>
+                            <p className="text-[10px] text-zinc-500 font-bold">POST leads directly to any URL endpoint</p>
+                          </div>
+                        </div>
+                        <label className="relative inline-flex items-center cursor-pointer select-none">
+                          <input 
+                            type="checkbox" 
+                            checked={crmForm.webhookEnabled}
+                            onChange={(e) => setCrmForm({ ...crmForm, webhookEnabled: e.target.checked })}
+                            className="sr-only peer"
+                          />
+                          <div className="w-11 h-6 bg-zinc-800 rounded-full peer peer-focus:ring-1 peer-focus:ring-red-500 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-zinc-400 after:border-zinc-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600 peer-checked:after:bg-white"></div>
+                        </label>
+                      </div>
+
+                      {crmForm.webhookEnabled && (
+                        <div className="space-y-4 pt-1 animate-fade-in">
+                          <div>
+                            <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-400 mb-1">Webhook Target URL</label>
+                            <input 
+                              type="url"
+                              value={crmForm.webhookUrl}
+                              onChange={(e) => setCrmForm({ ...crmForm, webhookUrl: e.target.value })}
+                              placeholder="https://hooks.zapier.com/hooks/catch/..."
+                              className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-lg text-white text-xs focus:outline-none focus:border-red-500 transition-colors font-mono"
+                              required={crmForm.webhookEnabled}
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-400 mb-1">Custom HTTP Headers JSON (Optional)</label>
+                            <textarea 
+                              value={crmForm.webhookHeaders || ''}
+                              onChange={(e) => setCrmForm({ ...crmForm, webhookHeaders: e.target.value })}
+                              placeholder='{ "Authorization": "Bearer TOKEN" }'
+                              className="w-full h-16 px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-lg text-white text-xs focus:outline-none focus:border-red-500 transition-colors font-mono resize-none"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* HubSpot CRM Card */}
+                    <div className="p-6 bg-zinc-900 border border-zinc-850 rounded-2xl space-y-4">
+                      <div className="flex items-center justify-between border-b border-zinc-850 pb-3">
+                        <div className="flex items-center space-x-3">
+                          <div className="p-2 bg-amber-500/10 text-amber-500 rounded-lg">
+                            <Terminal size={20} />
+                          </div>
+                          <div>
+                            <h3 className="font-sans font-black text-xs uppercase tracking-wider text-white">HubSpot Forms API Integration</h3>
+                            <p className="text-[10px] text-zinc-500 font-bold">Push contacts directly to HubSpot Marketing suite</p>
+                          </div>
+                        </div>
+                        <label className="relative inline-flex items-center cursor-pointer select-none">
+                          <input 
+                            type="checkbox" 
+                            checked={crmForm.hubspotEnabled}
+                            onChange={(e) => setCrmForm({ ...crmForm, hubspotEnabled: e.target.checked })}
+                            className="sr-only peer"
+                          />
+                          <div className="w-11 h-6 bg-zinc-800 rounded-full peer peer-focus:ring-1 peer-focus:ring-red-500 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-zinc-400 after:border-zinc-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600 peer-checked:after:bg-white"></div>
+                        </label>
+                      </div>
+
+                      {crmForm.hubspotEnabled && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1 animate-fade-in">
+                          <div>
+                            <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-400 mb-1">HubSpot Portal ID</label>
+                            <input 
+                              type="text"
+                              value={crmForm.hubspotPortalId}
+                              onChange={(e) => setCrmForm({ ...crmForm, hubspotPortalId: e.target.value })}
+                              placeholder="e.g. 1234567"
+                              className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-lg text-white text-xs focus:outline-none focus:border-red-500 transition-colors font-mono"
+                              required={crmForm.hubspotEnabled}
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-400 mb-1">Form GUID</label>
+                            <input 
+                              type="text"
+                              value={crmForm.hubspotFormGuid}
+                              onChange={(e) => setCrmForm({ ...crmForm, hubspotFormGuid: e.target.value })}
+                              placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                              className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-lg text-white text-xs focus:outline-none focus:border-red-500 transition-colors font-mono"
+                              required={crmForm.hubspotEnabled}
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Mailchimp Integration */}
+                    <div className="p-6 bg-zinc-900 border border-zinc-850 rounded-2xl space-y-4">
+                      <div className="flex items-center justify-between border-b border-zinc-850 pb-3">
+                        <div className="flex items-center space-x-3">
+                          <div className="p-2 bg-sky-500/10 text-sky-500 rounded-lg">
+                            <Mail size={20} />
+                          </div>
+                          <div>
+                            <h3 className="font-sans font-black text-xs uppercase tracking-wider text-white">Mailchimp Newsletter Sync</h3>
+                            <p className="text-[10px] text-zinc-500 font-bold">Auto-subscribe new leads into Mailchimp lists</p>
+                          </div>
+                        </div>
+                        <label className="relative inline-flex items-center cursor-pointer select-none">
+                          <input 
+                            type="checkbox" 
+                            checked={crmForm.mailchimpEnabled}
+                            onChange={(e) => setCrmForm({ ...crmForm, mailchimpEnabled: e.target.checked })}
+                            className="sr-only peer"
+                          />
+                          <div className="w-11 h-6 bg-zinc-800 rounded-full peer peer-focus:ring-1 peer-focus:ring-red-500 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-zinc-400 after:border-zinc-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600 peer-checked:after:bg-white"></div>
+                        </label>
+                      </div>
+
+                      {crmForm.mailchimpEnabled && (
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1 animate-fade-in">
+                          <div className="sm:col-span-1">
+                            <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-400 mb-1">Server Prefix</label>
+                            <input 
+                              type="text"
+                              value={crmForm.mailchimpServer || ''}
+                              onChange={(e) => setCrmForm({ ...crmForm, mailchimpServer: e.target.value })}
+                              placeholder="e.g. us14"
+                              className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-lg text-white text-xs focus:outline-none focus:border-red-500 transition-colors font-mono"
+                              required={crmForm.mailchimpEnabled}
+                            />
+                          </div>
+
+                          <div className="sm:col-span-1">
+                            <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-400 mb-1">Audience List ID</label>
+                            <input 
+                              type="text"
+                              value={crmForm.mailchimpAudienceId}
+                              onChange={(e) => setCrmForm({ ...crmForm, mailchimpAudienceId: e.target.value })}
+                              placeholder="e.g. b48a8aef3d"
+                              className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-lg text-white text-xs focus:outline-none focus:border-red-500 transition-colors font-mono"
+                              required={crmForm.mailchimpEnabled}
+                            />
+                          </div>
+
+                          <div className="sm:col-span-1">
+                            <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-400 mb-1">API Key</label>
+                            <input 
+                              type="password"
+                              value={crmForm.mailchimpApiKey}
+                              onChange={(e) => setCrmForm({ ...crmForm, mailchimpApiKey: e.target.value })}
+                              placeholder="e.g. key-xxxxxx"
+                              className="w-full px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-lg text-white text-xs focus:outline-none focus:border-red-500 transition-colors font-mono"
+                              required={crmForm.mailchimpEnabled}
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                  </div>
+
+                  {/* Right side - status panel & save */}
+                  <div className="space-y-6">
+                    <div className="p-6 bg-zinc-900 border border-zinc-850 rounded-2xl space-y-4">
+                      <h4 className="font-sans font-black text-xs uppercase tracking-wider text-white">Save Changes</h4>
+                      <p className="text-[11px] text-zinc-400 leading-normal">Ensure all active toggles are configured with proper webhook and credential addresses before saving.</p>
+                      
+                      <button
+                        type="submit"
+                        className="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-wider rounded-xl transition-all shadow-md shadow-red-900/10 text-xs hover:scale-[1.02]"
+                      >
+                        Save Integrations
+                      </button>
+                    </div>
+
+                    <div className="p-6 bg-zinc-900 border border-zinc-850 rounded-2xl space-y-4 text-xs text-zinc-400">
+                      <h4 className="font-sans font-black text-xs uppercase tracking-wider text-white text-red-500">How Lead Capture Works:</h4>
+                      <ul className="space-y-2.5 pl-4 list-disc leading-relaxed text-[11px]">
+                        <li>All submissions from the <span className="text-white font-bold">Contact Form</span>, <span className="text-white font-bold">Join Membership Forms</span>, and the <span className="text-white font-bold">MS Fitness Chatbot Assistant</span> trigger these integrations in parallel.</li>
+                        <li>Sync is completely transparent and logs detailed HTTP status indicators so you can debug API configurations live!</li>
+                      </ul>
+                    </div>
+                  </div>
+                </form>
+
+                {/* Integration logs section */}
+                <div className="space-y-4 pt-4 border-t border-zinc-850">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-sans font-black text-lg uppercase text-white flex items-center gap-2">
+                        <Terminal size={18} className="text-zinc-500" />
+                        CRM Synchronization History
+                      </h3>
+                      <p className="text-zinc-500 text-[11px] font-medium uppercase tracking-wider">Live execution audit logger and telemetry</p>
+                    </div>
+
+                    {crmLogs.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={clearCRMLogs}
+                        className="px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white border border-zinc-800 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors"
+                      >
+                        Clear Sync Logs
+                      </button>
+                    )}
+                  </div>
+
+                  {crmLogs.length === 0 ? (
+                    <div className="p-8 text-center bg-zinc-950 border border-zinc-900 rounded-2xl">
+                      <Terminal className="text-zinc-700 mx-auto mb-2" size={32} />
+                      <p className="text-zinc-400 font-sans text-xs">No synchronization requests captured yet.</p>
+                      <p className="text-zinc-600 text-[10px] font-mono mt-1">Submit a test lead using the button above to begin logging telemetry.</p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto bg-zinc-900 border border-zinc-850 rounded-xl">
+                      <table className="w-full text-left text-xs text-zinc-300">
+                        <thead className="bg-[#0b0b0c] text-zinc-400 uppercase text-[9px] font-black tracking-widest border-b border-zinc-850">
+                          <tr>
+                            <th className="p-3">Time</th>
+                            <th className="p-3">Lead Details</th>
+                            <th className="p-3">Channel</th>
+                            <th className="p-3">Status</th>
+                            <th className="p-3">Telemetry Log</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-zinc-850">
+                          {crmLogs.map((log) => (
+                            <tr key={log.id} className="hover:bg-zinc-950/40 transition-colors">
+                              <td className="p-3 whitespace-nowrap text-zinc-500 font-mono text-[10px]">
+                                {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                              </td>
+                              <td className="p-3">
+                                <p className="font-bold text-white text-[11px]">{log.leadName}</p>
+                                <p className="text-zinc-500 font-mono text-[9px]">{log.leadEmail}</p>
+                              </td>
+                              <td className="p-3">
+                                <span className="bg-zinc-950 text-zinc-300 border border-zinc-800 px-2 py-0.5 rounded-md text-[10px] font-mono">
+                                  {log.crmType}
+                                </span>
+                              </td>
+                              <td className="p-3">
+                                <span className={`inline-flex items-center gap-1 font-black uppercase text-[9px] tracking-wider ${log.status === 'Success' ? 'text-green-500' : 'text-red-500'}`}>
+                                  {log.status === 'Success' ? <CheckCircle size={10} /> : <XCircle size={10} />}
+                                  {log.status}
+                                </span>
+                              </td>
+                              <td className="p-3 max-w-[250px] sm:max-w-md">
+                                <p className="text-zinc-400 font-mono text-[10px] leading-relaxed break-all line-clamp-2" title={log.responseMessage}>
+                                  {log.responseMessage}
+                                </p>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 

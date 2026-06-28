@@ -144,7 +144,9 @@ const defaultSettings: GymSettings = {
   footerText: '© 2026 MS Fitness. Crafted for premium, elite-level physical performance and lifestyle excellence.',
   facebookUrl: 'https://facebook.com/msfitness',
   instagramUrl: 'https://instagram.com/manavdesignlab',
-  workingHours: 'Mon - Fri: 5:00 AM - 10:00 PM | Sat - Sun: 7:00 AM - 8:00 PM'
+  workingHours: 'Mon - Fri: 5:00 AM - 10:00 PM | Sat - Sun: 7:00 AM - 8:00 PM',
+  googleSheetEnabled: false,
+  googleSheetUrl: ''
 };
 
 const defaultTrainers: Trainer[] = [
@@ -590,6 +592,38 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } else {
       console.log('Supabase client not configured. Saving request to local state:', request);
       setRequests(prev => [request, ...prev]);
+    }
+
+    // Trigger Google Sheets Sync if enabled
+    if (settings && settings.googleSheetEnabled && settings.googleSheetUrl) {
+      try {
+        console.log('Syncing lead to Google Sheets webhook:', request);
+        const gsPayload = {
+          timestamp: createdAt,
+          id: request.id,
+          fullName: request.fullName,
+          mobileNumber: request.mobileNumber,
+          email: request.email,
+          age: request.age,
+          gender: request.gender,
+          plan: request.selectedPlanId === 'free-visit' ? 'Free Gym Visit' : request.selectedPlanId,
+          fitnessGoal: request.fitnessGoal,
+          message: request.message,
+          source: 'MS Fitness Website Chatbot / Request Form'
+        };
+
+        await fetch(settings.googleSheetUrl, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(gsPayload)
+        });
+        console.log('Successfully completed Google Sheets trigger!');
+      } catch (gsErr) {
+        console.error('Google Sheets sync execution error:', gsErr);
+      }
     }
 
     // Trigger CRM sync
@@ -1123,7 +1157,9 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     footerText: settings?.footerText || defaultSettings.footerText,
     facebookUrl: settings?.facebookUrl || defaultSettings.facebookUrl,
     instagramUrl: settings?.instagramUrl || defaultSettings.instagramUrl,
-    workingHours: settings?.workingHours || defaultSettings.workingHours
+    workingHours: settings?.workingHours || defaultSettings.workingHours,
+    googleSheetEnabled: settings?.googleSheetEnabled !== undefined ? settings.googleSheetEnabled : defaultSettings.googleSheetEnabled,
+    googleSheetUrl: settings?.googleSheetUrl || defaultSettings.googleSheetUrl
   };
 
   const safeHero: HeroSection = {
@@ -1190,7 +1226,11 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       updateTestimonial,
       deleteTestimonial,
       updateHero,
-      updateAbout
+      updateAbout,
+      crmConfig,
+      crmLogs,
+      updateCRMConfig,
+      clearCRMLogs
     }}>
       {children}
     </GymContext.Provider>

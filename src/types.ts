@@ -77,6 +77,8 @@ export interface GymSettings {
   facebookUrl?: string;
   instagramUrl?: string;
   workingHours?: string;
+  googleSheetEnabled?: boolean;
+  googleSheetUrl?: string;
 }
 
 export interface Trainer {
