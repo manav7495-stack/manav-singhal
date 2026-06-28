@@ -6,7 +6,7 @@ export const WhatsAppButton: React.FC = () => {
   const { settings } = useGym();
 
   const handleWhatsAppClick = () => {
-    const message = encodeURIComponent("Hi MS Fitness! I am interested in joining your gym. Please share more details.");
+    const message = encodeURIComponent("Hi ManavDesignLab! I am interested in joining your program. Please share more details.");
     window.open(`https://wa.me/${settings.whatsappNumber.replace(/\D/g, '')}?text=${message}`, '_blank');
   };
 

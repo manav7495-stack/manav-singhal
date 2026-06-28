@@ -1,6 +1,6 @@
 {
-  "name": "MS Fitness",
-  "description": "A modern, premium, fully responsive gym website with an integrated user panel, contact tracking, and complete admin dashboard for managing memberships, announcements, and plans.",
+  "name": "ManavDesignLab",
+  "description": "A modern, premium, fully responsive website for ManavDesignLab (MDL) creative studio and elite physical sanctuary with integrated CRM and smart chatbot features.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

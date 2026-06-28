@@ -40,10 +40,10 @@ function AppContent() {
             <div className="w-16 h-16 border-2 border-brand/20 border-t-brand rounded-full animate-spin"></div>
             {/* Pulsing Text logo */}
             <span className="mt-6 text-xs font-black uppercase tracking-[0.4em] text-brand animate-pulse">
-              MS Fitness
+              Manav Design Lab
             </span>
             <span className="mt-2 text-[9px] font-mono uppercase tracking-widest text-zinc-500">
-              Synchronizing Temple Database...
+              Synchronizing MDL Creative Studio...
             </span>
           </div>
         </div>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import { openWhatsAppCTA } from '../utils/whatsapp';
+import brandLogo from '../assets/images/manavdesignlab-logo.png';
 
 interface NavbarProps {
   currentView?: string;
@@ -34,14 +35,14 @@ export const Navbar: React.FC<NavbarProps> = () => {
           {/* Logo */}
           <div 
             onClick={() => handleNavClick('home')} 
-            className="flex items-center space-x-2.5 cursor-pointer group select-none"
+            className="flex items-center cursor-pointer group select-none"
           >
-            <div className="w-9 h-9 bg-brand rounded-sm flex items-center justify-center font-black italic text-black text-base tracking-tighter transition-transform group-hover:scale-105">
-              MS
-            </div>
-            <span className="font-sans font-black text-2xl tracking-tighter uppercase text-white">
-              FITNESS
-            </span>
+            <img 
+              src={brandLogo} 
+              alt="ManavDesignLab Logo" 
+              className="h-[42px] md:h-[55px] w-auto object-contain transition-transform duration-200 group-hover:scale-105"
+              referrerPolicy="no-referrer"
+            />
           </div>
 
           {/* Desktop Navigation Links */}

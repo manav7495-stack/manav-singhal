@@ -1,6 +1,7 @@
 import React from 'react';
 import { Dumbbell, Lock, ChevronRight, Facebook, Instagram, Shield } from 'lucide-react';
 import { useGym } from '../context/GymContext';
+import brandLogo from '../assets/images/manavdesignlab-logo.png';
 
 export const Footer: React.FC = () => {
   const { settings } = useGym();
@@ -23,17 +24,17 @@ export const Footer: React.FC = () => {
           <div className="space-y-4">
             <div 
               onClick={() => handleScroll('home')} 
-              className="flex items-center space-x-2 cursor-pointer"
+              className="flex items-center cursor-pointer group"
             >
-              <div className="bg-brand p-1.5 rounded-sm text-black flex items-center justify-center font-extrabold">
-                <Dumbbell size={18} />
-              </div>
-              <span className="font-sans font-black text-lg tracking-widest text-white italic">
-                MS <span className="text-brand">FITNESS</span>
-              </span>
+              <img 
+                src={brandLogo} 
+                alt="ManavDesignLab Logo" 
+                className="h-[42px] md:h-[55px] w-auto object-contain transition-transform duration-200 group-hover:scale-105"
+                referrerPolicy="no-referrer"
+              />
             </div>
             <p className="text-zinc-500 text-xs sm:text-sm leading-relaxed">
-              MS Fitness is Fit City's gold standard athletic temple. Forging powerful wills and elite-tier physical performance since MMXXIV.
+              Manav Design Lab (MDL) is your premium strength and design sanctuary, forging elite physical and aesthetic performance.
             </p>
             {/* Social links */}
             <div className="flex items-center space-x-3 pt-2">

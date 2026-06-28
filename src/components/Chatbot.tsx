@@ -52,14 +52,14 @@ export const Chatbot: React.FC = () => {
     { label: '💆 Wellness & Massage Rates', value: 'massage_rates' },
     { label: '🪒 Grooming & Shaving', value: 'grooming_info' },
     { label: '📍 Location & Contact', value: 'location_info' },
-    { label: '🏋️ Join MS Fitness Now', value: 'join_flow' }
+    { label: '🏋️ Join ManavDesignLab Now', value: 'join_flow' }
   ];
 
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 'welcome',
       sender: 'bot',
-      text: "👋 Welcome to MS Fitness! I am your MS Fitness Assistant. I am here to help you unlock premium physical performance and find the perfect membership setup.\n\nChoose an option below or type your questions directly!",
+      text: "👋 Welcome to ManavDesignLab! I am your MDL Assistant. I am here to help you unlock premium physical performance and find the perfect membership setup.\n\nChoose an option below or type your questions directly!",
       timestamp: new Date(),
       choices: welcomeChoices
     }
@@ -234,7 +234,7 @@ export const Chatbot: React.FC = () => {
   // 1. View Membership Plans
   const showMembershipPlans = () => {
     addBotMessage(
-      "📋 **MS Fitness Membership Plans**\n\n" +
+      "📋 **ManavDesignLab Membership Plans**\n\n" +
       "🔴 **Basic Plan**\n" +
       "• **₹999** / 1 Month\n" +
       "• Includes full gym floor, locker, and shower access.\n\n" +
@@ -245,7 +245,7 @@ export const Chatbot: React.FC = () => {
       "• **₹5,994** / 12 Months\n" +
       "• Includes 24/7 access, elite coach, steam room & physical gift pack.",
       [
-        { label: '🏋️ Join MS Fitness Now', value: 'join_flow' },
+        { label: '🏋️ Join ManavDesignLab Now', value: 'join_flow' },
         { label: '🎟️ Book Free Gym Visit', value: 'free_visit_flow' },
         { label: '📋 Main Menu', value: 'main_menu' }
       ],
@@ -256,7 +256,7 @@ export const Chatbot: React.FC = () => {
   // 4. Wellness & Massage Rates
   const showWellnessRates = () => {
     addBotMessage(
-      "💆 **MS Fitness Wellness & Massage Rates**\n\n" +
+      "💆 **ManavDesignLab Wellness & Massage Rates**\n\n" +
       "Accelerate physical muscle recovery with our professional therapeutic massage passes:\n\n" +
       "• **Body Massage (1 Day Pass):** ₹999\n" +
       "• **Body Massage (1 Month):** ₹1,500\n" +
@@ -286,7 +286,7 @@ export const Chatbot: React.FC = () => {
   // 6. Location & Contact
   const showLocationContact = () => {
     addBotMessage(
-      "📍 **MS Fitness - Location & Contact Details**\n\n" +
+      "📍 **ManavDesignLab - Location & Contact Details**\n\n" +
       "• ✉️ **Email:** support@manav.sbs\n" +
       "• 📞 **Phone/WhatsApp:** +91 8587882431\n" +
       "• 🗺️ **Address:** W/44, Sainik Farm, New Delhi - 110017\n" +
@@ -315,7 +315,7 @@ export const Chatbot: React.FC = () => {
   const startJoinFlow = () => {
     setFlowState('join_name');
     addBotMessage(
-      "🏋️ **Join MS Fitness Now**\n\n" +
+      "🏋️ **Join ManavDesignLab Now**\n\n" +
       "Let's register your profile for immediate enrollment!\n\n" +
       "What is your **Full Name**?"
     );
@@ -544,7 +544,7 @@ export const Chatbot: React.FC = () => {
       startJoinFlow();
     } else if (value === 'main_menu') {
       addBotMessage(
-        "Here is the MS Fitness Assistant main menu. Select any service to explore:",
+        "Here is the MDL Assistant main menu. Select any service to explore:",
         welcomeChoices
       );
     } else {
@@ -580,7 +580,7 @@ export const Chatbot: React.FC = () => {
       <button
         id="chatbot-trigger"
         onClick={() => setIsOpen(!isOpen)}
-        aria-label="MS Fitness Assistant Chat"
+        aria-label="ManavDesignLab Assistant Chat"
         className={`fixed bottom-6 right-6 z-50 p-4 rounded-full shadow-[0_10px_30px_rgba(227,28,37,0.3)] transition-all duration-300 transform hover:scale-110 active:scale-95 group focus:outline-none flex items-center justify-center ${
           isOpen ? 'bg-zinc-950 text-red-500 border border-zinc-800 rotate-90' : 'bg-red-600 hover:bg-red-700 text-white animate-bounce hover:animate-none'
         }`}
@@ -626,7 +626,7 @@ export const Chatbot: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="font-sans font-black uppercase text-sm tracking-wide text-white italic flex items-center gap-1.5">
-                    MS Fitness Assistant
+                    MDL Assistant
                   </h3>
                   <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">Online • Performance Desk</p>
                 </div>
@@ -754,7 +754,7 @@ export const Chatbot: React.FC = () => {
             {/* Small Footer Signature */}
             <div className="bg-zinc-950 border-t border-zinc-900/50 py-2 text-center text-[8px] text-zinc-600 font-bold uppercase tracking-widest flex items-center justify-center space-x-1 select-none">
               <Heart size={8} className="fill-red-600 text-red-600 animate-pulse" />
-              <span>MS Fitness Assistant Elite Chat</span>
+              <span>MDL Assistant Elite Chat</span>
             </div>
           </motion.div>
         )}

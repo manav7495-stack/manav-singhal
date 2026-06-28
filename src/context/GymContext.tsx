@@ -42,7 +42,7 @@ const defaultPlans: MembershipPlan[] = [
       'Customized workout planner',
       '2 personalized training sessions',
       'Nutrition & diet guidelines booklet',
-      '10% off at the MS Fitness juice bar',
+      '10% off at the MDL juice bar',
       'Access to steam room & sauna',
       'Saves 40% over monthly renewals!'
     ],
@@ -61,7 +61,7 @@ const defaultPlans: MembershipPlan[] = [
       'Unlimited steam bath & recovery zone',
       '1 free energy drink or shake per day',
       'Unlimited Zumba & CrossFit group classes',
-      'Exclusive MS Fitness premium gym bag & shaker'
+      'Exclusive MDL premium designer gear & shaker'
     ],
     discountBadge: '50% OFF'
   }
@@ -71,7 +71,7 @@ const defaultAnnouncements: Announcement[] = [
   {
     id: 'ann-1',
     title: 'Summer Power Up Challenge 2026!',
-    content: 'Ignite your fitness goals! Complete 15 workouts between July 1st and July 20th to earn our exclusive, limited-edition MS Fitness heavy cotton tee and a free shaker. Sign up at the front desk today!',
+    content: 'Ignite your fitness goals! Complete 15 workouts between July 1st and July 20th to earn our exclusive, limited-edition MDL heavy cotton tee and a free shaker. Sign up at the front desk today!',
     date: '2026-06-25',
     type: 'Event'
   },
@@ -141,7 +141,7 @@ const defaultSettings: GymSettings = {
   email: 'support@manav.sbs',
   address: 'W/44, Sainik Farm, New Delhi - 110017',
   whatsappNumber: '+918587882431',
-  footerText: '© 2026 MS Fitness. Crafted for premium, elite-level physical performance and lifestyle excellence.',
+  footerText: '© 2026 ManavDesignLab. Crafted for premium, elite-level design, physical performance and lifestyle excellence.',
   facebookUrl: 'https://facebook.com/msfitness',
   instagramUrl: 'https://instagram.com/manavdesignlab',
   workingHours: 'Mon - Fri: 5:00 AM - 10:00 PM | Sat - Sun: 7:00 AM - 8:00 PM',
@@ -174,7 +174,7 @@ const defaultTestimonials: Testimonial[] = [
     name: 'Marcus Brody',
     role: 'Member since 2024',
     achievement: 'Lost 45 lbs & gained extreme strength',
-    quote: "The culture here is electric. It is not just about showing up; the trainers actively correct your forms, the equipment is always pristine, and the community supports your daily grind. Joining MS Fitness completely changed my lifestyle.",
+    quote: "The culture here is electric. It is not just about showing up; the trainers actively correct your forms, the equipment is always pristine, and the community supports your daily grind. Joining ManavDesignLab completely changed my lifestyle.",
     rating: 5
   },
   {
@@ -182,7 +182,7 @@ const defaultTestimonials: Testimonial[] = [
     name: 'Natasha Romanoff',
     role: 'Member since 2025',
     achievement: 'Mastered Olympic lifts & core stability',
-    quote: "As an active endurance athlete, I needed a gym that had serious equipment and professional coaches. MS Fitness exceeds all metrics. The layout is optimized, the acoustics are great, and the steam room is perfect for post-workout recovery.",
+    quote: "As an active endurance athlete, I needed a gym that had serious equipment and professional coaches. ManavDesignLab exceeds all metrics. The layout is optimized, the acoustics are great, and the steam room is perfect for post-workout recovery.",
     rating: 5
   },
   {
@@ -190,7 +190,7 @@ const defaultTestimonials: Testimonial[] = [
     name: 'Rohan Sharma',
     role: 'Member since 2026',
     achievement: 'Gained 15 lbs of pure lean muscle mass',
-    quote: "The Yearly Plan is worth every penny! Having a dedicated personal coach and automated macro nutrition plans removed all the guesswork. Highly recommend MS Fitness to anyone looking for premium progression.",
+    quote: "The Yearly Plan is worth every penny! Having a dedicated personal coach and automated macro nutrition plans removed all the guesswork. Highly recommend ManavDesignLab to anyone looking for premium progression.",
     rating: 5
   }
 ];
@@ -198,7 +198,7 @@ const defaultTestimonials: Testimonial[] = [
 const defaultHero: HeroSection = {
   id: 'primary',
   title: 'Forge your Legacy',
-  subtitle: 'Welcome to MS Fitness. Experience premier equipment, legendary trainers, and an elite community designed to push your biological limits.',
+  subtitle: 'Welcome to ManavDesignLab. Experience premier equipment, legendary trainers, and an elite community designed to push your biological limits.',
   watermark: 'GYM',
   image_url: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&q=80&w=1920',
   button_text_1: 'Join Now',
@@ -212,11 +212,11 @@ const defaultHero: HeroSection = {
 const defaultAbout: AboutSection = {
   id: 'primary',
   title: 'Who We Are',
-  subtitle: 'ABOUT MS FITNESS',
-  description_1: "Founded in MMXXIV, MS Fitness is Fit City's gold-standard athletic temple. We provide a space where high-intensity strength conditioning meets meticulous luxury amenities. From custom Hammer Strength equipment to individualized macro nutrition consulting, we have spared no expense.",
+  subtitle: 'ABOUT MANAVDESIGNLAB',
+  description_1: "Founded in MMXXIV, ManavDesignLab is our premium design and athletic sanctuary. We provide a space where high-intensity strength conditioning meets meticulous luxury amenities. From custom Hammer Strength equipment to individualized macro nutrition consulting, we have spared no expense.",
   description_2: "Our elite certified strength coaches and nutritional consultants are dedicated to helping you forge your legacy.",
   image_url: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?auto=format&fit=crop&q=80&w=800',
-  quote: "At MS Fitness, we do not just lift weights — we elevate lifestyles, forge mental fortitude, and sculpt champions.",
+  quote: "At ManavDesignLab, we do not just lift weights — we elevate lifestyles, forge mental fortitude, and sculpt champions.",
   features: [
     { title: "Elite Cleanliness & Safety", desc: "Medical-grade air filtration and 24/7 dedicated sanitization crew.", icon: "Shield" },
     { title: "Certified Specialists", desc: "Every coach holds accredited international athletic certifications.", icon: "Award" },
@@ -609,7 +609,7 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           plan: request.selectedPlanId === 'free-visit' ? 'Free Gym Visit' : request.selectedPlanId,
           fitnessGoal: request.fitnessGoal,
           message: request.message,
-          source: 'MS Fitness Website Chatbot / Request Form'
+          source: 'ManavDesignLab Website Chatbot / Request Form'
         };
 
         await fetch(settings.googleSheetUrl, {
