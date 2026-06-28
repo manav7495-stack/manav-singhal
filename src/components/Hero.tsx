@@ -1,6 +1,7 @@
 import React from 'react';
-import { Phone, Mail, MapPin, MessageCircle, ChevronRight, Play } from 'lucide-react';
+import { Phone, Mail, MapPin, MessageCircle, ChevronRight, Play, Calendar } from 'lucide-react';
 import { useGym } from '../context/GymContext';
+import { openWhatsAppCTA } from '../utils/whatsapp';
 
 interface HeroProps {
   onJoinClick: () => void;
@@ -11,8 +12,7 @@ export const Hero: React.FC<HeroProps> = ({ onJoinClick, onViewPlansClick }) => 
   const { settings, hero } = useGym();
 
   const handleWhatsAppClick = () => {
-    const message = encodeURIComponent("Hi MS Fitness! I am interested in joining your gym. Please share more details.");
-    window.open(`https://wa.me/${settings.whatsappNumber.replace(/\D/g, '')}?text=${message}`, '_blank');
+    openWhatsAppCTA('Contact Us');
   };
 
   return (
@@ -91,11 +91,19 @@ export const Hero: React.FC<HeroProps> = ({ onJoinClick, onViewPlansClick }) => 
             {/* Actions */}
             <div className="flex flex-col sm:flex-row gap-4">
               <button
-                onClick={onJoinClick}
+                onClick={() => openWhatsAppCTA('Join Now')}
                 className="group flex items-center justify-center space-x-2 px-8 py-4 bg-brand hover:bg-white text-black font-black text-base uppercase tracking-widest italic rounded-sm transition-colors duration-200"
               >
-                <span>{hero.button_text_1}</span>
+                <span>Join Now</span>
                 <ChevronRight size={18} className="transform group-hover:translate-x-1 transition-transform" />
+              </button>
+
+              <button
+                onClick={() => openWhatsAppCTA('Book Visit')}
+                className="group flex items-center justify-center space-x-2 px-8 py-4 bg-white hover:bg-brand text-black font-black text-base uppercase tracking-widest italic rounded-sm transition-colors duration-200"
+              >
+                <Calendar size={16} />
+                <span>Book Free Visit</span>
               </button>
               
               <button
@@ -103,7 +111,7 @@ export const Hero: React.FC<HeroProps> = ({ onJoinClick, onViewPlansClick }) => 
                 className="flex items-center justify-center space-x-2 px-8 py-4 bg-transparent border-2 border-white text-white font-black text-base uppercase tracking-widest italic rounded-sm hover:bg-white hover:text-black transition-colors duration-200"
               >
                 <Play size={14} className="fill-current text-current" />
-                <span>{hero.button_text_2}</span>
+                <span>View Plans</span>
               </button>
             </div>
 

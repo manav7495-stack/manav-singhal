@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, CheckCircle, ShieldCheck } from 'lucide-react';
 import { useGym } from '../context/GymContext';
 import { Gender } from '../types';
+import { triggerWhatsAppLead } from '../utils/whatsapp';
 
 interface RequestFormProps {
   isOpen: boolean;
@@ -85,6 +86,22 @@ export const RequestForm: React.FC<RequestFormProps> = ({ isOpen, onClose, prese
         });
         console.log('Membership form: Request successfully saved to Supabase!');
 
+        // Determine source and selected plan details
+        const source = preselectedPlanId ? 'Membership' : 'Join Now';
+        const selectedPlanName = plans.find(p => p.id === formData.selectedPlanId)?.name || 'Selected Plan';
+        const customMessage = `Age: ${formData.age}, Gender: ${formData.gender}, Address: ${formData.address}${formData.message ? `. Note: ${formData.message}` : ''}`;
+
+        // Trigger WhatsApp with encoded details
+        triggerWhatsAppLead({
+          source: source,
+          name: formData.fullName,
+          phone: formData.mobileNumber,
+          email: formData.email,
+          preferredPlan: selectedPlanName,
+          fitnessGoal: formData.fitnessGoal,
+          message: customMessage
+        });
+
         setIsSubmitted(true);
         setTimeout(() => {
           setIsSubmitted(false);
@@ -101,7 +118,7 @@ export const RequestForm: React.FC<RequestFormProps> = ({ isOpen, onClose, prese
             message: ''
           });
           onClose();
-        }, 3000);
+        }, 8000);
       } catch (err: any) {
         console.error('Membership form submission failed with error:', err);
         setSubmitError(err?.message || 'Database insert failed. Please check the console for more details.');
@@ -131,13 +148,13 @@ export const RequestForm: React.FC<RequestFormProps> = ({ isOpen, onClose, prese
               <CheckCircle size={56} className="stroke-[2.5]" />
             </div>
             <h3 className="font-sans font-black text-2xl uppercase tracking-widest text-white italic">
-              Application Submitted!
+              WhatsApp Lead Ready!
             </h3>
-            <p className="text-zinc-400 text-center max-w-md leading-relaxed text-sm sm:text-base">
-              Thank you, <span className="text-white font-bold">{formData.fullName}</span>! Your request for the <span className="text-brand font-bold uppercase tracking-wider">{plans.find(p => p.id === formData.selectedPlanId)?.name || 'selected plan'}</span> has been submitted to the admin desk. 
+            <p className="text-zinc-300 text-center max-w-md leading-relaxed text-sm sm:text-base">
+              Your details are ready to send on WhatsApp. Please tap Send to complete your request.
             </p>
             <p className="text-xs text-zinc-500 italic">
-              Redirecting you back shortly...
+              Closing this form in a few moments...
             </p>
           </div>
         ) : (

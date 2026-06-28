@@ -36,12 +36,34 @@ export const ContactForm: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (validate()) {
-      addContactResponse({
-        name: formData.name,
-        phone: formData.phone,
-        email: formData.email,
-        message: formData.message
-      });
+      // 1. Try to add response to the local gym context/admin panel database
+      try {
+        addContactResponse({
+          name: formData.name,
+          phone: formData.phone,
+          email: formData.email,
+          message: formData.message
+        });
+      } catch (err) {
+        console.error('Local db response saving failed:', err);
+      }
+
+      // 2. Open email client via mailto
+      const recipient = 'support@manav.sbs';
+      const subject = 'New Contact Message from MS Fitness Website';
+      const currentDate = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+      const body = [
+        'New Contact Message',
+        '',
+        `Name: ${formData.name}`,
+        `Phone: ${formData.phone}`,
+        `Email: ${formData.email}`,
+        `Message: ${formData.message}`,
+        `Date & Time: ${currentDate}`
+      ].join('\n');
+
+      const mailtoUrl = `mailto:${recipient}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      window.open(mailtoUrl, '_blank');
 
       setIsSuccess(true);
       // Reset form
@@ -54,7 +76,7 @@ export const ContactForm: React.FC = () => {
 
       setTimeout(() => {
         setIsSuccess(false);
-      }, 5000);
+      }, 8000);
     }
   };
 
@@ -155,8 +177,8 @@ export const ContactForm: React.FC = () => {
               <div className="mb-6 p-4 rounded-sm bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 flex items-start space-x-3 text-sm">
                 <CheckCircle size={20} className="flex-shrink-0 mt-0.5" />
                 <div>
-                  <h4 className="font-bold">Message sent successfully!</h4>
-                  <p className="text-zinc-400 text-xs mt-1">Thank you for writing. Our athletic coordinators will reach out shortly.</p>
+                  <h4 className="font-bold">Email Ready!</h4>
+                  <p className="text-zinc-300 text-xs mt-1">Your email is ready. Please tap Send to complete your message.</p>
                 </div>
               </div>
             )}

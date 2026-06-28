@@ -12,55 +12,13 @@ import { Testimonials } from './components/Testimonials';
 import { ContactForm } from './components/ContactForm';
 import { Footer } from './components/Footer';
 import { Chatbot } from './components/Chatbot';
-import { UserPanel } from './components/UserPanel';
-import { AdminPanel } from './components/AdminPanel';
 
 function AppContent() {
   const { loading } = useGym();
-  const [view, setView] = useState<'public' | 'user' | 'admin'>('public');
-  
-  // Security / Session State
-  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(() => {
-    return localStorage.getItem('ms_admin_logged') === 'true';
-  });
-
-  const [isUserLoggedIn, setIsUserLoggedIn] = useState(() => {
-    return localStorage.getItem('ms_user_logged') === 'true';
-  });
-
-  const [loggedInUserEmail, setLoggedInUserEmail] = useState(() => {
-    return localStorage.getItem('ms_user_email') || '';
-  });
 
   // Modals
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
   const [preselectedPlanId, setPreselectedPlanId] = useState<string | undefined>(undefined);
-
-  const handleAdminLogin = () => {
-    setIsAdminLoggedIn(true);
-    localStorage.setItem('ms_admin_logged', 'true');
-  };
-
-  const handleAdminLogout = () => {
-    setIsAdminLoggedIn(false);
-    localStorage.removeItem('ms_admin_logged');
-    setView('public');
-  };
-
-  const handleUserLogin = (email: string) => {
-    setIsUserLoggedIn(true);
-    setLoggedInUserEmail(email);
-    localStorage.setItem('ms_user_logged', 'true');
-    localStorage.setItem('ms_user_email', email);
-  };
-
-  const handleUserLogout = () => {
-    setIsUserLoggedIn(false);
-    setLoggedInUserEmail('');
-    localStorage.removeItem('ms_user_logged');
-    localStorage.removeItem('ms_user_email');
-    setView('public');
-  };
 
   const handleSelectPlan = (planId: string) => {
     setPreselectedPlanId(planId);
@@ -70,10 +28,6 @@ function AppContent() {
   const handleOpenJoinNow = () => {
     setPreselectedPlanId(undefined);
     setIsJoinModalOpen(true);
-  };
-
-  const handleOpenUserLogin = () => {
-    setView('user');
   };
 
   return (
@@ -97,62 +51,29 @@ function AppContent() {
 
       {/* Sticky Top Navbar */}
       <Navbar 
-        currentView={view}
-        setView={setView}
-        isAdminLoggedIn={isAdminLoggedIn}
-        onAdminLogout={handleAdminLogout}
-        isUserLoggedIn={isUserLoggedIn}
-        loggedInUserEmail={loggedInUserEmail}
-        onUserLogout={handleUserLogout}
         onOpenJoinModal={handleOpenJoinNow}
-        onOpenUserLoginModal={handleOpenUserLogin}
       />
 
       {/* Main content rendering */}
-      {view === 'public' && (
-        <main className="animate-fade-in">
-          <Hero 
-            onJoinClick={handleOpenJoinNow} 
-            onViewPlansClick={() => {
-              const el = document.getElementById('plans');
-              if (el) el.scrollIntoView({ behavior: 'smooth' });
-            }}
-          />
-          <About />
-          <Services />
-          <MembershipPlans onSelectPlan={handleSelectPlan} />
-          <Gallery />
-          <Announcements />
-          <Testimonials />
-          <ContactForm />
-          
-          {/* Main Public Footer */}
-          <Footer setView={setView} isAdminLoggedIn={isAdminLoggedIn} />
-        </main>
-      )}
-
-      {view === 'user' && (
-        <main className="animate-fade-in">
-          <UserPanel 
-            onLoginSuccess={handleUserLogin}
-            onLogout={handleUserLogout}
-            loggedInUserEmail={loggedInUserEmail}
-          />
-          <Footer setView={setView} isAdminLoggedIn={isAdminLoggedIn} />
-        </main>
-      )}
-
-      {view === 'admin' && (
-        <main className="animate-fade-in">
-          <AdminPanel 
-            onLoginSuccess={handleAdminLogin}
-            onLogout={handleAdminLogout}
-            isAdminLoggedIn={isAdminLoggedIn}
-          />
-          {/* We skip Footer on the full height admin console tab to make it look professional, 
-              but we let administrators exit easily via the Sidebar/Navbar */}
-        </main>
-      )}
+      <main className="animate-fade-in">
+        <Hero 
+          onJoinClick={handleOpenJoinNow} 
+          onViewPlansClick={() => {
+            const el = document.getElementById('plans');
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+          }}
+        />
+        <About />
+        <Services />
+        <MembershipPlans onSelectPlan={handleSelectPlan} />
+        <Gallery />
+        <Announcements />
+        <Testimonials />
+        <ContactForm />
+        
+        {/* Main Public Footer */}
+        <Footer />
+      </main>
 
       {/* Dynamic Membership Request Modal */}
       <RequestForm 

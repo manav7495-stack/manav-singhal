@@ -2,22 +2,14 @@ import React from 'react';
 import { Dumbbell, Lock, ChevronRight, Facebook, Instagram, Shield } from 'lucide-react';
 import { useGym } from '../context/GymContext';
 
-interface FooterProps {
-  setView: (view: 'public' | 'user' | 'admin') => void;
-  isAdminLoggedIn: boolean;
-}
-
-export const Footer: React.FC<FooterProps> = ({ setView, isAdminLoggedIn }) => {
+export const Footer: React.FC = () => {
   const { settings } = useGym();
 
   const handleScroll = (id: string) => {
-    setView('public');
-    setTimeout(() => {
-      const element = document.getElementById(id);
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    }, 100);
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   };
 
   return (
@@ -25,7 +17,7 @@ export const Footer: React.FC<FooterProps> = ({ setView, isAdminLoggedIn }) => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Top Segment */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mb-12">
           
           {/* Brand Column */}
           <div className="space-y-4">
@@ -118,25 +110,6 @@ export const Footer: React.FC<FooterProps> = ({ setView, isAdminLoggedIn }) => {
                 </button>
               </li>
             </ul>
-          </div>
-
-          {/* Portal Operations */}
-          <div className="space-y-4">
-            <h4 className="font-sans font-black text-xs uppercase text-white tracking-widest mb-4 italic">Portals</h4>
-            <p className="text-zinc-500 text-xs leading-relaxed">
-              Are you an authorized coordinator? Enter your administrative credentials below to update plans, schedules, and monitor memberships.
-            </p>
-            <button
-              onClick={() => setView('admin')}
-              className={`w-full flex items-center justify-center space-x-2 py-2.5 px-4 rounded-sm text-xs font-black uppercase tracking-widest transition-colors border ${
-                isAdminLoggedIn 
-                  ? 'bg-brand/10 border-brand/30 text-brand hover:bg-brand hover:text-black'
-                  : 'bg-zinc-950 border-zinc-800 hover:border-brand text-zinc-300'
-              }`}
-            >
-              <Lock size={12} />
-              <span>{isAdminLoggedIn ? 'Open Admin Dashboard' : 'Admin Login'}</span>
-            </button>
           </div>
 
         </div>

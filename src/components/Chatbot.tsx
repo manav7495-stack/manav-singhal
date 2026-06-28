@@ -6,6 +6,7 @@ import {
   Calendar, Clock, Check, Sparkle, Heart, ChevronRight 
 } from 'lucide-react';
 import { useGym } from '../context/GymContext';
+import { triggerWhatsAppLead, openWhatsAppCTA } from '../utils/whatsapp';
 
 interface Message {
   id: string;
@@ -82,8 +83,7 @@ export const Chatbot: React.FC = () => {
 
   // Open WhatsApp Link
   const triggerWhatsApp = () => {
-    const text = encodeURIComponent("Hi, I want to know about MS Fitness membership.");
-    window.open(`https://wa.me/918587882431?text=${text}`, '_blank');
+    openWhatsAppCTA('Chatbot');
   };
 
   // Main input text process
@@ -369,13 +369,36 @@ export const Chatbot: React.FC = () => {
 
       try {
         await addRequest(finalData);
+        
+        // 1. Open WhatsApp pre-filled message
+        triggerWhatsAppLead({
+          source: 'Gym Visit',
+          name: leadData.fullName,
+          phone: leadData.mobileNumber,
+          email: 'chatbot.lead@manav.sbs',
+          preferredPlan: 'Free Gym Visit',
+          fitnessGoal: 'Free Gym Trial / Walkthrough Tour',
+          message: `Preferred visit date/time: ${trimmed}`
+        });
+
+        // 2. Add custom success confirmation message in chat
         addBotMessage(
-          "Thank you! Your details have been submitted. Our MS Fitness team will contact you shortly on WhatsApp."
+          "Your details are ready to send on WhatsApp. Please tap Send to complete your request."
         );
       } catch (err) {
         console.error('Failed to submit free visit lead:', err);
+        // Fallback WhatsApp trigger anyway
+        triggerWhatsAppLead({
+          source: 'Gym Visit',
+          name: leadData.fullName,
+          phone: leadData.mobileNumber,
+          email: 'chatbot.lead@manav.sbs',
+          preferredPlan: 'Free Gym Visit',
+          fitnessGoal: 'Free Gym Trial / Walkthrough Tour',
+          message: `Preferred visit date/time: ${trimmed}`
+        });
         addBotMessage(
-          "Thank you! Your details have been submitted. Our MS Fitness team will contact you shortly on WhatsApp. (Logged locally)"
+          "Your details are ready to send on WhatsApp. Please tap Send to complete your request."
         );
       }
       return;
@@ -455,13 +478,36 @@ export const Chatbot: React.FC = () => {
 
       try {
         await addRequest(finalData);
+        
+        // 1. Open WhatsApp pre-filled message
+        triggerWhatsAppLead({
+          source: 'Chatbot',
+          name: leadData.fullName,
+          phone: leadData.mobileNumber,
+          email: 'chatbot.member@manav.sbs',
+          preferredPlan: leadData.selectedPlanId || 'Selected Plan',
+          fitnessGoal: leadData.fitnessGoal || 'General Improvement',
+          message: `Preferred joining date: ${trimmed}`
+        });
+
+        // 2. Add custom success message
         addBotMessage(
-          "Thank you! Your details have been submitted. Our MS Fitness team will contact you shortly on WhatsApp."
+          "Your details are ready to send on WhatsApp. Please tap Send to complete your request."
         );
       } catch (err) {
         console.error('Failed to submit join request lead:', err);
+        // Fallback WhatsApp trigger anyway
+        triggerWhatsAppLead({
+          source: 'Chatbot',
+          name: leadData.fullName,
+          phone: leadData.mobileNumber,
+          email: 'chatbot.member@manav.sbs',
+          preferredPlan: leadData.selectedPlanId || 'Selected Plan',
+          fitnessGoal: leadData.fitnessGoal || 'General Improvement',
+          message: `Preferred joining date: ${trimmed}`
+        });
         addBotMessage(
-          "Thank you! Your details have been submitted. Our MS Fitness team will contact you shortly on WhatsApp. (Logged locally)"
+          "Your details are ready to send on WhatsApp. Please tap Send to complete your request."
         );
       }
       return;
