@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Dumbbell, Lock, ChevronRight, Facebook, Instagram, Shield } from 'lucide-react';
 import { useGym } from '../context/GymContext';
 
 export const Footer: React.FC = () => {
   const { settings } = useGym();
+  const [logoError, setLogoError] = useState(false);
 
   const handleScroll = (id: string) => {
     const element = document.getElementById(id);
@@ -25,12 +26,19 @@ export const Footer: React.FC = () => {
               onClick={() => handleScroll('home')} 
               className="flex items-center cursor-pointer group"
             >
-              <img 
-                src="/logo.png" 
-                alt="MS Fitness Logo" 
-                className="h-[42px] md:h-[55px] w-auto object-contain transition-transform duration-200 group-hover:scale-105"
-                referrerPolicy="no-referrer"
-              />
+              {!logoError ? (
+                <img 
+                  src="/logo.png" 
+                  alt="MS Fitness Logo" 
+                  onError={() => setLogoError(true)}
+                  className="h-[42px] md:h-[55px] w-auto object-contain transition-transform duration-200 group-hover:scale-105"
+                  referrerPolicy="no-referrer"
+                />
+              ) : (
+                <span className="font-sans font-black text-xl md:text-2xl tracking-[0.2em] italic text-brand transition-all duration-200 group-hover:scale-105">
+                  MS <span className="text-white">FITNESS</span>
+                </span>
+              )}
             </div>
             <p className="text-zinc-500 text-xs sm:text-sm leading-relaxed">
               MS Fitness is our premium strength and conditioning sanctuary, forging elite physical performance and lifestyle excellence.
