@@ -10,17 +10,20 @@ import {
   Trainer,
   Testimonial,
   HeroSection,
-  AboutSection
+  AboutSection,
+  CRMIntegrationConfig,
+  CRMSyncLog
 } from '../types';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { sendLeadToCRM } from '../lib/crm';
 
 // Seed Data
 const defaultPlans: MembershipPlan[] = [
   {
-    id: 'plan-monthly',
-    name: 'Monthly Plan',
-    price: '$49',
-    billing: 'per month',
+    id: 'plan-basic',
+    name: 'Basic Plan',
+    price: '₹999',
+    billing: '1 Month',
     features: [
       'Access to premium Gym floor & machines',
       'Free locker access & hot showers',
@@ -30,25 +33,27 @@ const defaultPlans: MembershipPlan[] = [
     ]
   },
   {
-    id: 'plan-quarterly',
-    name: 'Quarterly Plan',
-    price: '$129',
-    billing: 'per 3 months',
+    id: 'plan-standard',
+    name: 'Standard Plan',
+    price: '₹3,597',
+    billing: '6 Months',
     features: [
-      'All Monthly Plan features included',
+      'All Basic Plan features included',
       'Customized workout planner',
       '2 personalized training sessions',
       'Nutrition & diet guidelines booklet',
       '10% off at the MS Fitness juice bar',
-      'Access to steam room & sauna'
+      'Access to steam room & sauna',
+      'Saves 40% over monthly renewals!'
     ],
-    isPopular: true
+    isPopular: true,
+    discountBadge: '40% OFF'
   },
   {
-    id: 'plan-yearly',
-    name: 'Yearly Plan',
-    price: '$399',
-    billing: 'per year',
+    id: 'plan-premium',
+    name: 'Premium Plan',
+    price: '₹5,994',
+    billing: '12 Months',
     features: [
       '24/7 unlimited gym access',
       'Dedicated elite personal coach',
@@ -57,7 +62,8 @@ const defaultPlans: MembershipPlan[] = [
       '1 free energy drink or shake per day',
       'Unlimited Zumba & CrossFit group classes',
       'Exclusive MS Fitness premium gym bag & shaker'
-    ]
+    ],
+    discountBadge: '50% OFF'
   }
 ];
 
@@ -131,13 +137,13 @@ const defaultMembers: Member[] = [];
 const defaultContactResponses: ContactResponse[] = [];
 
 const defaultSettings: GymSettings = {
-  phone: '+1 (555) 987-6543',
-  email: 'info@msfitness.com',
-  address: '123 Muscle Avenue, Fit City, FC 90210',
-  whatsappNumber: '+15559876543',
+  phone: '+91 8587882431',
+  email: 'support@manav.sbs',
+  address: 'W/44, Sainik Farm, New Delhi - 110017',
+  whatsappNumber: '+918587882431',
   footerText: '© 2026 MS Fitness. Crafted for premium, elite-level physical performance and lifestyle excellence.',
   facebookUrl: 'https://facebook.com/msfitness',
-  instagramUrl: 'https://instagram.com/msfitness',
+  instagramUrl: 'https://instagram.com/manavdesignlab',
   workingHours: 'Mon - Fri: 5:00 AM - 10:00 PM | Sat - Sun: 7:00 AM - 8:00 PM'
 };
 
@@ -278,9 +284,29 @@ interface GymContextProps {
   // Sections actions
   updateHero: (hero: HeroSection) => Promise<void>;
   updateAbout: (about: AboutSection) => Promise<void>;
+
+  // CRM Integration actions
+  crmConfig: CRMIntegrationConfig;
+  crmLogs: CRMSyncLog[];
+  updateCRMConfig: (config: CRMIntegrationConfig) => Promise<void>;
+  clearCRMLogs: () => void;
 }
 
 const GymContext = createContext<GymContextProps | undefined>(undefined);
+
+const defaultCRMConfig: CRMIntegrationConfig = {
+  webhookEnabled: false,
+  webhookUrl: '',
+  webhookHeaders: '',
+  hubspotEnabled: false,
+  hubspotPortalId: '',
+  hubspotFormGuid: '',
+  hubspotAccessToken: '',
+  mailchimpEnabled: false,
+  mailchimpApiKey: '',
+  mailchimpAudienceId: '',
+  mailchimpServer: ''
+};
 
 export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [requests, setRequests] = useState<MembershipRequest[]>([]);
@@ -294,6 +320,34 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [testimonials, setTestimonials] = useState<Testimonial[]>(defaultTestimonials);
   const [hero, setHero] = useState<HeroSection>(defaultHero);
   const [about, setAbout] = useState<AboutSection>(defaultAbout);
+
+  const [crmConfig, setCrmConfig] = useState<CRMIntegrationConfig>(() => {
+    try {
+      const saved = localStorage.getItem('ms_fitness_crm_config');
+      return saved ? JSON.parse(saved) : defaultCRMConfig;
+    } catch {
+      return defaultCRMConfig;
+    }
+  });
+
+  const [crmLogs, setCrmLogs] = useState<CRMSyncLog[]>(() => {
+    try {
+      const saved = localStorage.getItem('ms_fitness_crm_sync_logs');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const updateCRMConfig = async (newConfig: CRMIntegrationConfig) => {
+    setCrmConfig(newConfig);
+    localStorage.setItem('ms_fitness_crm_config', JSON.stringify(newConfig));
+  };
+
+  const clearCRMLogs = () => {
+    setCrmLogs([]);
+    localStorage.removeItem('ms_fitness_crm_sync_logs');
+  };
 
   const [loading, setLoading] = useState(isSupabaseConfigured);
 
@@ -534,9 +588,36 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         throw err;
       }
     } else {
-      const errorMsg = 'Supabase client is not configured or is null.';
-      console.error(errorMsg);
-      throw new Error(errorMsg);
+      console.log('Supabase client not configured. Saving request to local state:', request);
+      setRequests(prev => [request, ...prev]);
+    }
+
+    // Trigger CRM sync
+    try {
+      const newLogs = await sendLeadToCRM({
+        type: 'Membership Request',
+        name: request.fullName,
+        email: request.email,
+        phone: request.mobileNumber,
+        details: {
+          age: request.age,
+          gender: request.gender,
+          selectedPlanId: request.selectedPlanId,
+          fitnessGoal: request.fitnessGoal,
+          address: request.address,
+          message: request.message
+        }
+      }, crmConfig);
+      
+      if (newLogs.length > 0) {
+        setCrmLogs(prev => {
+          const updated = [...newLogs, ...prev];
+          localStorage.setItem('ms_fitness_crm_sync_logs', JSON.stringify(updated));
+          return updated;
+        });
+      }
+    } catch (crmErr) {
+      console.error('CRM sync execution error:', crmErr);
     }
   };
 

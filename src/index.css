@@ -3,8 +3,8 @@
 @theme {
   --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "Space Grotesk", ui-monospace, SFMono-Regular, monospace;
-  --color-brand: #ff3e00;
-  --color-brand-dark: #d63400;
+  --color-brand: #e31c25;
+  --color-brand-dark: #b30c13;
 }
 
 @utility text-stroke-white {
@@ -13,7 +13,7 @@
 }
 
 @utility text-stroke-brand {
-  -webkit-text-stroke: 2px #ff3e00;
+  -webkit-text-stroke: 2px #e31c25;
   color: transparent;
 }
 

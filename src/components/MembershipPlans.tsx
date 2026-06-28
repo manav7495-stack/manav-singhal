@@ -31,15 +31,22 @@ export const MembershipPlans: React.FC<MembershipPlansProps> = ({ onSelectPlan }
               key={plan.id}
               className={`relative flex flex-col justify-between rounded-sm p-8 sm:p-10 transition-all duration-300 border ${
                 plan.isPopular 
-                  ? 'bg-[#0a0a0a] border-brand shadow-2xl md:-translate-y-4' 
-                  : 'bg-zinc-900 border-zinc-800 hover:border-zinc-700'
+                  ? 'bg-black border-brand shadow-[0_0_30px_rgba(227,28,37,0.2)] md:-translate-y-4' 
+                  : 'bg-zinc-950 border-zinc-900 hover:border-zinc-800 hover:shadow-[0_0_20px_rgba(227,28,37,0.05)]'
               }`}
             >
               {/* Popularity Badge */}
               {plan.isPopular && (
                 <div className="absolute top-0 right-1/2 translate-x-1/2 -translate-y-1/2 bg-brand text-black text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-sm flex items-center space-x-1 shadow-lg">
-                  <Star size={10} className="fill-black" />
+                  <Star size={10} className="fill-black animate-spin-slow" />
                   <span>Best Value</span>
+                </div>
+              )}
+
+              {/* Discount Badge */}
+              {plan.discountBadge && (
+                <div className="absolute top-4 right-4 bg-brand text-white text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-sm shadow-md animate-pulse">
+                  {plan.discountBadge}
                 </div>
               )}
 
@@ -59,7 +66,7 @@ export const MembershipPlans: React.FC<MembershipPlansProps> = ({ onSelectPlan }
                   </span>
                 </div>
 
-                <div className={`w-full h-px ${plan.isPopular ? 'bg-brand/20' : 'bg-zinc-800'} my-6`}></div>
+                <div className={`w-full h-px ${plan.isPopular ? 'bg-brand/25' : 'bg-zinc-900'} my-6`}></div>
 
                 {/* Features List */}
                 <ul className="space-y-4 mb-10 text-xs sm:text-sm">
@@ -80,7 +87,7 @@ export const MembershipPlans: React.FC<MembershipPlansProps> = ({ onSelectPlan }
                 className={`w-full py-4 rounded-sm font-black text-xs uppercase tracking-widest transition-colors duration-200 ${
                   plan.isPopular
                     ? 'bg-brand hover:bg-white text-black'
-                    : 'bg-zinc-800 hover:bg-brand text-zinc-200 hover:text-black'
+                    : 'bg-zinc-900 hover:bg-brand text-zinc-200 hover:text-black border border-zinc-800 hover:border-brand'
                 }`}
               >
                 Select Plan

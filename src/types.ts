@@ -41,6 +41,7 @@ export interface MembershipPlan {
   billing: string; // e.g. "per month", "per quarter", "per year"
   features: string[];
   isPopular?: boolean;
+  discountBadge?: string;
 }
 
 export interface Announcement {
@@ -126,3 +127,30 @@ export interface AboutSection {
   quote: string;
   features: AboutSectionFeature[];
 }
+
+export interface CRMIntegrationConfig {
+  webhookEnabled: boolean;
+  webhookUrl: string;
+  webhookHeaders?: string; // JSON string of custom headers
+  hubspotEnabled: boolean;
+  hubspotPortalId: string;
+  hubspotFormGuid: string;
+  hubspotAccessToken?: string;
+  mailchimpEnabled: boolean;
+  mailchimpApiKey: string;
+  mailchimpAudienceId: string;
+  mailchimpServer?: string;
+}
+
+export interface CRMSyncLog {
+  id: string;
+  timestamp: string;
+  leadType: 'Membership Request' | 'Contact Message';
+  leadName: string;
+  leadEmail: string;
+  crmType: 'Webhook' | 'HubSpot' | 'Mailchimp';
+  status: 'Success' | 'Failed';
+  responseMessage: string;
+  payloadSent: string; // JSON string of payload
+}
+

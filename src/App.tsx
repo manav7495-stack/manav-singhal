@@ -11,7 +11,7 @@ import { Announcements } from './components/Announcements';
 import { Testimonials } from './components/Testimonials';
 import { ContactForm } from './components/ContactForm';
 import { Footer } from './components/Footer';
-import { WhatsAppButton } from './components/WhatsAppButton';
+import { Chatbot } from './components/Chatbot';
 import { UserPanel } from './components/UserPanel';
 import { AdminPanel } from './components/AdminPanel';
 
@@ -161,8 +161,8 @@ function AppContent() {
         preselectedPlanId={preselectedPlanId}
       />
 
-      {/* Floating Interactive WhatsApp CTA */}
-      <WhatsAppButton />
+      {/* Floating Interactive Chatbot Assistant & WhatsApp CTA */}
+      <Chatbot />
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Dumbbell, Activity, UserCheck, TrendingDown, TrendingUp, Sparkles } from 'lucide-react';
+import { Dumbbell, Activity, UserCheck, TrendingDown, TrendingUp, Sparkles, Scissors, HeartPulse } from 'lucide-react';
 
 interface ServiceItem {
   id: string;
@@ -108,6 +108,94 @@ export const Services: React.FC = () => {
 
             </div>
           ))}
+        </div>
+
+        {/* Premium Wellness Add-ons Sub-Section */}
+        <div className="mt-24">
+          <div className="text-center mb-12">
+            <h3 className="font-sans font-black text-xs uppercase tracking-[0.3em] text-brand mb-2">
+              Luxurious Add-ons
+            </h3>
+            <p className="font-sans font-black text-2xl sm:text-4xl uppercase text-white tracking-tighter italic">
+              PREMIUM WELLNESS SERVICES
+            </p>
+            <div className="w-12 h-1 bg-brand mx-auto mt-3 rounded-sm"></div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            {/* Shaving Service Card */}
+            <div className="group relative overflow-hidden rounded-sm border border-zinc-800 bg-black p-8 h-[280px] flex flex-col justify-between transition-all duration-300 hover:border-brand hover:shadow-[0_0_15px_rgba(227,28,37,0.1)]">
+              <div className="absolute inset-0 z-0">
+                <img 
+                  src="https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&q=80&w=600" 
+                  alt="Shaving" 
+                  className="w-full h-full object-cover opacity-0 group-hover:opacity-10 scale-100 group-hover:scale-105 transition-all duration-500"
+                  referrerPolicy="no-referrer"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent"></div>
+              </div>
+              <div className="relative z-10">
+                <div className="inline-flex p-3 rounded-sm bg-zinc-900 border border-zinc-800 text-brand mb-5 group-hover:bg-brand group-hover:text-black group-hover:border-brand transition-all duration-300">
+                  <Scissors size={24} />
+                </div>
+                <h4 className="font-sans font-black text-xl uppercase text-white tracking-tight italic">
+                  Premium Shaving Service
+                </h4>
+                <p className="text-zinc-500 text-xs font-bold uppercase mt-1 tracking-wider text-brand">
+                  Shaving Facility Available
+                </p>
+              </div>
+              <p className="relative z-10 text-zinc-400 text-sm leading-relaxed">
+                Enjoy professional, sterile hot-towel shaves, beard trims, and absolute grooming excellence inside our high-end luxury gym locker lounge.
+              </p>
+            </div>
+
+            {/* Body Massage Card */}
+            <div className="group relative overflow-hidden rounded-sm border border-zinc-800 bg-black p-8 h-[280px] flex flex-col justify-between transition-all duration-300 hover:border-brand hover:shadow-[0_0_15px_rgba(227,28,37,0.1)]">
+              <div className="absolute inset-0 z-0">
+                <img 
+                  src="https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&q=80&w=600" 
+                  alt="Body Massage" 
+                  className="w-full h-full object-cover opacity-0 group-hover:opacity-10 scale-100 group-hover:scale-105 transition-all duration-500"
+                  referrerPolicy="no-referrer"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent"></div>
+              </div>
+              <div className="relative z-10">
+                <div className="inline-flex p-3 rounded-sm bg-zinc-900 border border-zinc-800 text-brand mb-5 group-hover:bg-brand group-hover:text-black group-hover:border-brand transition-all duration-300">
+                  <HeartPulse size={24} />
+                </div>
+                <div className="flex justify-between items-start">
+                  <h4 className="font-sans font-black text-xl uppercase text-white tracking-tight italic">
+                    Therapeutic Massage
+                  </h4>
+                  <div className="bg-brand/10 border border-brand/20 text-brand text-[10px] font-black px-2.5 py-0.5 rounded-sm">
+                    Wellness Add-on
+                  </div>
+                </div>
+              </div>
+              
+              {/* Pricing breakdown list */}
+              <div className="relative z-10 grid grid-cols-3 gap-2 bg-zinc-950 p-3 rounded-sm border border-zinc-900">
+                <div className="text-center">
+                  <p className="text-[10px] text-zinc-500 uppercase font-bold">1 Day Pass</p>
+                  <p className="text-sm font-black text-white italic">₹999</p>
+                </div>
+                <div className="text-center border-x border-zinc-900">
+                  <p className="text-[10px] text-zinc-500 uppercase font-bold">1 Month</p>
+                  <p className="text-sm font-black text-white italic">₹1,500</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-[10px] text-zinc-500 uppercase font-bold">6 Months</p>
+                  <p className="text-sm font-black text-white italic">₹1,600</p>
+                </div>
+              </div>
+
+              <p className="relative z-10 text-zinc-400 text-xs">
+                Accredited physical therapists offering deep tissue release, recovery massage, and joint decompression.
+              </p>
+            </div>
+          </div>
         </div>
 
       </div>
